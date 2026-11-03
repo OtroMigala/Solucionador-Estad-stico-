@@ -120,7 +120,7 @@ export function resolverRegresion(d: DatosRegresion, op: OpcionesRegresion): Res
 
 /* ────────────────────────── piezas comunes ────────────────────────── */
 
-function ecuacionTex(beta: number[], f: Formato, simple: boolean): string {
+export function ecuacionTex(beta: number[], f: Formato, simple: boolean): string {
   let s = `\\hat{y} = ${fmtTex(beta[0], f)}`;
   beta.slice(1).forEach((bj, j) => {
     const v = simple ? 'x' : `x_{${j + 1}}`;
