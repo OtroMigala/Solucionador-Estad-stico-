@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+.vercel/
+*.local
+.DS_Store
+__pycache__/
+.venv/
