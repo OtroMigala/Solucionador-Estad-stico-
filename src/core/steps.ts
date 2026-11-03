@@ -1,9 +1,10 @@
 /**
- * Tipos base del motor de pasos.
+ * Motor de pasos.
  *
  * Cada función del núcleo devuelve el resultado y la lista de pasos que lo
- * producen. Cada paso referencia un método del registro (RNF-01): si un
- * método no está en el registro, no se puede usar.
+ * producen. Un paso se compone de bloques (texto, fórmula, tabla, resultado…)
+ * y siempre referencia un método del registro: si un método no está en el
+ * registro, no se puede usar (RNF-01).
  */
 
 export type Tema = 'regresion-simple' | 'regresion-multiple' | 'probabilidad';
@@ -18,24 +19,46 @@ export interface Metodo {
   diapositiva: string;
 }
 
+/** Celda de tabla: texto plano o LaTeX en línea. */
+export type Celda = string | { latex: string; texto: string };
+
+export interface Columna {
+  titulo: string;
+  /** Alineación; por defecto, números a la derecha. */
+  alinear?: 'izq' | 'der' | 'centro';
+}
+
+export type Bloque =
+  /** Párrafo. Admite fórmulas en línea entre \( y \). */
+  | { tipo: 'texto'; texto: string }
+  /** Fórmula en bloque con su versión en texto plano (respaldo si KaTeX falla, RNF-03). */
+  | { tipo: 'formula'; latex: string; texto: string }
+  /** Resultado destacado del paso. */
+  | { tipo: 'resultado'; latex: string; texto: string }
+  | { tipo: 'tabla'; columnas: Columna[]; filas: Celda[][]; pie?: Celda[]; nota?: string }
+  /** Decisión o interpretación final. */
+  | { tipo: 'conclusion'; texto: string; tono: 'afirmativo' | 'negativo' | 'neutro' }
+  /** Lista de elementos (p. ej. un espacio muestral por extensión). */
+  | { tipo: 'lista'; titulo?: string; items: string[] }
+  | { tipo: 'aviso'; texto: string }
+  /** Contenido plegable (p. ej. las operaciones de fila de Gauss-Jordan). */
+  | { tipo: 'detalles'; titulo: string; bloques: Bloque[] };
+
 export interface Paso {
   titulo: string;
-  /** Fórmula general en LaTeX. */
-  latex: string;
-  /** Versión en texto plano, respaldo si KaTeX falla (RNF-03). */
-  textoPlano: string;
-  /** Fórmula con los valores sustituidos (LaTeX). */
-  sustitucion?: string;
-  /** Resultado numérico o textual del paso. */
-  resultado?: string;
   /** id de un método del registro. */
   metodo: string;
+  /** Por qué se hace este paso: la idea detrás de la fórmula. */
+  porque?: string;
+  bloques: Bloque[];
 }
 
 export interface Solucion<T> {
   resultado: T;
   pasos: Paso[];
 }
+
+export type Respuesta<T> = { ok: true; solucion: Solucion<T> } | { ok: false; error: string };
 
 const P_SIMPLE = 'Covarianza y regresión lineal';
 const P_MULTIPLE = 'Regresión lineal múltiple';
@@ -83,3 +106,18 @@ export function paso(p: Paso): Paso {
   }
   return p;
 }
+
+/** Atajos para construir bloques. */
+export const b = {
+  texto: (texto: string): Bloque => ({ tipo: 'texto', texto }),
+  formula: (latex: string, texto: string): Bloque => ({ tipo: 'formula', latex, texto }),
+  resultado: (latex: string, texto: string): Bloque => ({ tipo: 'resultado', latex, texto }),
+  conclusion: (texto: string, tono: 'afirmativo' | 'negativo' | 'neutro' = 'neutro'): Bloque => ({
+    tipo: 'conclusion',
+    texto,
+    tono,
+  }),
+  aviso: (texto: string): Bloque => ({ tipo: 'aviso', texto }),
+  lista: (items: string[], titulo?: string): Bloque => ({ tipo: 'lista', items, titulo }),
+  detalles: (titulo: string, bloques: Bloque[]): Bloque => ({ tipo: 'detalles', titulo, bloques }),
+};
