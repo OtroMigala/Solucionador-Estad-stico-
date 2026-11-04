@@ -1550,9 +1550,8 @@ input[aria-invalid='true'] {
 .ejemplo {
   appearance: none;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
+  align-items: center;
+  padding: 12px 14px;
   border: 1px solid var(--linea);
   border-radius: var(--radio);
   background: var(--hoja-2);
@@ -1571,21 +1570,6 @@ input[aria-invalid='true'] {
 
 .ejemplo:hover strong {
   color: var(--acento);
-}
-
-.ejemplo-enunciado {
-  font-size: 0.8rem;
-  color: var(--tinta-2);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.ejemplo small {
-  font-family: var(--f-datos);
-  font-size: 0.72rem;
-  color: var(--tinta-3);
 }
 
 /* Etapa 2: ejercicio */

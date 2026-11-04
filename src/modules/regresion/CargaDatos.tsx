@@ -194,10 +194,6 @@ function TarjetaEjemplo({ e, onEjemplo }: { e: EjemploRegresion; onEjemplo: Prop
   return (
     <button type="button" className="ejemplo" onClick={() => onEjemplo(e)}>
       <strong>{e.fuente === 'taller' ? e.etiqueta : titulo ?? e.etiqueta}</strong>
-      <span className="ejemplo-enunciado">{e.enunciado}</span>
-      <small>
-        n = {e.y.length} · {e.x.length === 1 ? 'regresión simple' : `k = ${e.x.length}`}
-      </small>
     </button>
   );
 }
