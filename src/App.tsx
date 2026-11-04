@@ -74,11 +74,7 @@ function Contenido() {
           <div className="marca-simbolo" aria-hidden="true">
             Σ
           </div>
-          <div>
-            <span className="ceja">Estadística · Taller del tercer corte</span>
-            <h1>Solucionador Estadístico</h1>
-            <p>Regresión lineal y probabilidad resueltas paso a paso, con los métodos de las diapositivas del curso.</p>
-          </div>
+          <h1>Calculadora de regresión lineal, ¡con pasos!</h1>
         </div>
         <Ajustes />
       </header>
@@ -86,11 +82,9 @@ function Contenido() {
       <nav className="modulos" aria-label="Tema">
         <button type="button" className="modulo-btn" aria-pressed={vista === 'regresion'} onClick={() => ir('regresion')}>
           <strong>Regresión lineal</strong>
-          <span>Simple y múltiple · puntos 1–4 del taller</span>
         </button>
         <button type="button" className="modulo-btn" aria-pressed={vista !== 'regresion'} onClick={() => ir(ultimaHerramienta)}>
           <strong>Probabilidad y conteo</strong>
-          <span>Siete herramientas · puntos 1–36 del taller</span>
         </button>
       </nav>
 

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFormato } from '../../contexto';
 import { parseNumero } from '../../core/entrada';
-import { subindice } from '../../core/formato';
 import type { OpcionesRegresion, ResultadoRegresion } from '../../core/regresion';
 import { type Literal, type Seccion, infoLiteral, organizarSolucion, respuestaLiteral } from '../../core/regresion/literales';
 import type { Solucion } from '../../core/steps';
@@ -52,7 +51,6 @@ export function SolucionRegresion({ ejercicio, solucion, op, literales, onEditar
   const ys = filas.map((f) => parseNumero(f[0]));
   const xs = filas.map((f) => parseNumero(f[1]));
   const parteGrafica: Literal = r.k === 1 ? 'parametros' : 'anova';
-  const simbolo = (j: number) => (r.k > 1 ? `x${subindice(j + 1)}` : 'x');
 
   // Al imprimir (con el botón o con Ctrl + P) se abren las operaciones de fila de Gauss-Jordan.
   useEffect(() => {
@@ -103,10 +101,6 @@ export function SolucionRegresion({ ejercicio, solucion, op, literales, onEditar
               {ejemplo ? ejemplo.etiqueta : ejercicio.archivo ? `Datos de ${ejercicio.archivo}` : 'Datos propios'}
             </span>
             <h2>{r.k === 1 ? 'Regresión lineal simple' : `Regresión lineal múltiple con k = ${r.k} variables`}</h2>
-            <p className="nota">
-              n = {r.n} observaciones · y = {nombreY}
-              {tabla.nombresX.map((nom, j) => ` · ${simbolo(j)} = ${nom.trim() || 'sin nombre'}`)}
-            </p>
             {ejemplo && <p className="enunciado">{ejemplo.enunciado}</p>}
           </div>
           <div className="botones no-imprimir">

@@ -191,11 +191,6 @@ p {
   letter-spacing: -0.01em;
 }
 
-.marca p {
-  color: var(--tinta-2);
-  font-size: 0.9rem;
-}
-
 .ceja {
   font-size: 0.72rem;
   font-weight: 600;
@@ -243,10 +238,6 @@ p {
   font: 600 1.05rem/1.2 var(--f-titulo);
 }
 
-.modulo-btn span {
-  font-size: 0.8rem;
-  color: var(--tinta-3);
-}
 
 .modulo-btn[aria-pressed='true'] {
   background: var(--acento-suave);
@@ -1239,9 +1230,6 @@ input[aria-invalid='true'] {
   }
   .marca h1 {
     font-size: 1.4rem;
-  }
-  .marca p {
-    font-size: 0.82rem;
   }
   .marca-simbolo {
     width: 38px;

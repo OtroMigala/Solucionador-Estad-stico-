@@ -157,6 +157,20 @@ describe('detección de la tabla', () => {
     expect(sugerirRoles(t)).toEqual(['y', 'x', 'x']);
   });
 
+  it('reconoce el símbolo seguido de un espacio («X1 RS del emisor», «Y hFE»), con y al final', () => {
+    const t = detectarTabla([
+      ['X1 RS del emisor', 'X2 RS de la base', 'X3 E-B-RS', 'Y hFE'],
+      [14.62, 226, 7, 128.4],
+      [15.63, 220, 3.375, 52.62],
+      [14.62, 217.4, 6.375, 113.9],
+    ])!;
+    expect(sugerirRoles(t)).toEqual(['x', 'x', 'x', 'y']);
+    const d = datos(t);
+    expect(d.nombreY).toBe('hFE');
+    expect(d.nombresX).toEqual(['RS del emisor', 'RS de la base', 'E-B-RS']);
+    expect(d.filas[0]).toEqual([128.4, 14.62, 226, 7]);
+  });
+
   it('ignora las columnas de productos de la hoja de cálculo del taller', () => {
     const t = detectarTabla([
       ['x1', 'x2', 'y', 'x1^2', 'x1*x2', 'x1·y', 'y²'],
@@ -207,6 +221,10 @@ describe('nombres de las variables', () => {
     ['Pureza (x3)', 'Pureza'],
     ['y (kcal/kg)', 'y (kcal/kg)'],
     ['x1 (%)', 'x1 (%)'],
+    ['X1 RS del emisor', 'RS del emisor'],
+    ['X1 RS (ohm)', 'RS (ohm)'],
+    ['x 2', ''],
+    ['Xilófono', 'Xilófono'],
     ['Consumo de energía', 'Consumo de energía'],
   ])('%s → «%s»', (h, nombre) => expect(nombreVariable(h)).toBe(nombre));
 });

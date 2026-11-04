@@ -201,10 +201,14 @@ const normalizar = (h: string) =>
 
 const INDICE = /^(i|n|no\.?|n[°º.]|#|obs\.?|observaci[oó]n(es)?|id|fila|[ií]tem|dato|caso|mes|a[ñn]o|per[ií]odo)$/;
 
-/** Símbolo de la variable en el encabezado: «y», «x1 (Temperatura)», «x₂: Días», «Temperatura (x1)». */
+/**
+ * Símbolo de la variable en el encabezado: «y», «Y hFE», «X1 RS del emisor»,
+ * «x 2», «x1 (Temperatura)», «x₂: Días», «Temperatura (x1)». Se busca antes
+ * de quitar los espacios, porque «X1 RS» sin espacios sería «x1rs».
+ */
 function simbolo(h: string): { tipo: 'y' | 'x'; n: number | null } | null {
-  const c = normalizar(h).replace(/\s/g, '');
-  const m = /^(y|x(\d*))(?![a-z0-9])/.exec(c) ?? /\((y|x(\d*))\)$/.exec(c);
+  const n = normalizar(h);
+  const m = /^(y|x ?(\d*))(?![a-z0-9])/.exec(n) ?? /\((y|x(\d*))\)$/.exec(n.replace(/\s/g, ''));
   if (!m) return null;
   return m[1] === 'y' ? { tipo: 'y', n: null } : { tipo: 'x', n: m[2] ? Number(m[2]) : null };
 }
@@ -215,7 +219,7 @@ function rolPorEncabezado(h: string): Rol | null {
   if (c === '') return null;
   if (INDICE.test(n)) return 'ignorar';
   if (/ŷ|y\^|yhat|ajustad|estimad|residu|predic|error/.test(c)) return 'ignorar';
-  if (/[\^²³*·×]/.test(c) || /^x\d*(x\d*|y)/.test(c) || /^y[xy]/.test(c)) return 'ignorar';
+  if (/[\^²³*·×]/.test(c) || /^x\d*(x\d*|y)(?![a-z])/.test(c) || /^y[xy](?![a-z])/.test(c)) return 'ignorar';
   const s = simbolo(h);
   if (s) return s.tipo;
   if (/respuesta|dependiente/.test(n)) return 'y';
@@ -254,14 +258,16 @@ export function sugerirRoles(t: TablaDetectada): Rol[] {
 const esUnidad = (s: string) => !/\s/.test(s) && (s.includes('/') || s.replace(/[^a-záéíóúñ]/gi, '').length <= 2);
 
 /**
- * Nombre descriptivo de la variable: «x1 (Temperatura)» → «Temperatura»;
- * «x1» o «y» solos → ''. Si el paréntesis solo trae la unidad, como en
- * «y (kcal/kg)», se deja el encabezado completo.
+ * Nombre descriptivo de la variable: «x1 (Temperatura)» → «Temperatura»,
+ * «X1 RS del emisor» → «RS del emisor»; «x1» o «y» solos → ''. Si lo que
+ * sigue al símbolo es solo la unidad, como en «y (kcal/kg)», se deja el
+ * encabezado completo.
  */
 export function nombreVariable(encabezado: string): string {
   const h = encabezado.trim();
   const sim = '(?:y|x\\s*_?\\d*|x[₀-₉]+)';
-  const delante = new RegExp(`^${sim}\\s*[:=\\-–(]\\s*(.+?)\\)?$`, 'i').exec(h);
+  const delante =
+    new RegExp(`^${sim}\\s*\\(\\s*(.+?)\\)$`, 'i').exec(h) ?? new RegExp(`^${sim}(?:\\s*[:=\\-–]\\s*|\\s+)([^\\d\\s].*)$`, 'i').exec(h);
   if (delante) return esUnidad(delante[1].trim()) ? h : delante[1].trim();
   const detras = new RegExp(`^(.+?)\\s*\\(${sim}\\)$`, 'i').exec(h);
   if (detras) return detras[1].trim();
