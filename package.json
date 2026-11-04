@@ -14,6 +14,7 @@
     "build:artifact": "vite build --config vite.config.artifact.ts && node scripts/fragmento-artifact.mjs"
   },
   "dependencies": {
+    "fflate": "0.8.2",
     "jstat": "^1.9.6",
     "katex": "^0.16.11",
     "react": "^18.3.1",

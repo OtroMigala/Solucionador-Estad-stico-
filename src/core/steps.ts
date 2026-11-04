@@ -50,6 +50,8 @@ export interface Paso {
   metodo: string;
   /** Por qué se hace este paso: la idea detrás de la fórmula. */
   porque?: string;
+  /** Parte de la solución a la que pertenece (p. ej. el literal del taller que responde). */
+  parte?: string;
   bloques: Bloque[];
 }
 

@@ -3,6 +3,8 @@
  * corte y los ejemplos resueltos en las presentaciones del curso.
  */
 
+import type { Literal } from './literales';
+
 export interface EjemploRegresion {
   id: string;
   etiqueta: string;
@@ -14,6 +16,8 @@ export interface EjemploRegresion {
   x: number[][];
   alfa: number;
   x0: number[] | null;
+  /** Lo que pide el enunciado, en su orden. */
+  literales: Literal[];
   nota?: string;
 }
 
@@ -35,6 +39,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     ],
     alfa: 0.025,
     x0: [75, 24, 90, 98],
+    literales: ['parametros', 'anova', 'prueba', 'r2', 'prediccion'],
   },
   {
     id: 'taller-2',
@@ -52,6 +57,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     ],
     alfa: 0.05,
     x0: [14, 220, 5],
+    literales: ['parametros', 'anova', 'prueba', 'prediccion', 'r2'],
     nota:
       'Los seis primeros valores de x₃ (7; 3,375; 6,375; 6; 7,625; 6) no se pudieron leer del PDF del taller y se tomaron del conjunto de datos original del libro de texto. Compáralos con tu copia impresa del taller.',
   },
@@ -72,6 +78,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     ],
     alfa: 0.05,
     x0: [23.3, 24.53, 38.45, 57],
+    literales: ['parametros', 'anova', 'prueba', 'r2', 'prediccion'],
   },
   {
     id: 'taller-4',
@@ -88,6 +95,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     ],
     alfa: 0.05,
     x0: [20, 1200],
+    literales: ['parametros', 'anova', 'prueba', 'r2', 'prediccion'],
     nota: 'En el PDF el nivel de significancia aparece como «005»; se usa α = 0,05.',
   },
   {
@@ -106,6 +114,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     ],
     alfa: 0.05,
     x0: null,
+    literales: ['parametros', 'r2'],
     nota: 'Resultado de Excel del profesor: β̂₀ = −3,507778; β̂₁ = −0,002625; β̂₂ = 0,000799; β̂₃ = 0,154155; R² = 0,800463.',
   },
   {
@@ -124,6 +133,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     ],
     alfa: 0.05,
     x0: null,
+    literales: ['parametros', 'anova'],
   },
   {
     id: 'clase-dqo',
@@ -137,6 +147,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     x: [[3, 7, 11, 15, 18, 27, 29, 30, 30, 31, 31, 32, 33, 33, 34, 36, 36, 36, 37, 38, 39, 39, 39, 40, 41, 42, 42, 43, 44, 45, 46, 47, 50]],
     alfa: 0.05,
     x0: null,
+    literales: ['parametros', 'anova', 'prueba'],
   },
   {
     id: 'clase-saber',
@@ -150,5 +161,6 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     x: [[3, 2.4, 3.7, 3.6, 3.8, 2.9, 3.5, 3, 2.3, 3, 2.9, 2.7, 3.7, 2.7, 3.3, 2.8, 3.1, 2.8, 3, 2.2, 3.1, 3.3, 2.7, 3.5, 2.9, 2.7, 2.9, 3.2, 3.4, 2.5]],
     alfa: 0.05,
     x0: null,
+    literales: ['correlacion'],
   },
 ];

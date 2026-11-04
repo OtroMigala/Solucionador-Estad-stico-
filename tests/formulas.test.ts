@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import katex from 'katex';
 import { EJEMPLOS_REGRESION } from '../src/core/regresion/ejemplos';
 import { resolverRegresion } from '../src/core/regresion';
+import { literalesDisponibles, respuestaLiteral } from '../src/core/regresion/literales';
 import { EJEMPLOS_PROBABILIDAD, formInicial } from '../src/core/probabilidad/ejemplos';
 import { type Herramienta, resolverHerramienta } from '../src/core/probabilidad/formularios';
 import type { Bloque, Paso } from '../src/core/steps';
@@ -46,9 +47,14 @@ describe('todas las fórmulas se renderizan con KaTeX estricto', () => {
     it(`regresión (${f.decimales} decimales, ${f.coma ? 'coma' : 'punto'})`, () => {
       let n = 0;
       for (const e of EJEMPLOS_REGRESION) {
-        const r = resolverRegresion({ y: e.y, x: e.x, nombreY: e.nombreY, nombresX: e.nombresX }, { alfa: e.alfa, x0: e.x0, formato: f });
+        const op = { alfa: e.alfa, x0: e.x0, formato: f };
+        const r = resolverRegresion({ y: e.y, x: e.x, nombreY: e.nombreY, nombresX: e.nombresX }, op);
         if (!r.ok) throw new Error(r.error);
         n += revisar(r.solucion.pasos);
+        // Recuadros de respuesta de cada literal
+        for (const l of literalesDisponibles(e.x.length)) {
+          n += revisar([{ titulo: l.titulo, metodo: 'r2', bloques: respuestaLiteral(l.id, r.solucion.resultado, op) }]);
+        }
       }
       expect(n).toBeGreaterThan(100);
     });

@@ -1266,3 +1266,725 @@ input[aria-invalid='true'] {
     grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr) auto;
   }
 }
+
+/* ───────────── regresión: etapas datos → ejercicio → solución ───────────── */
+
+.regresion {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.etapas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--hoja);
+  overflow: hidden;
+}
+
+.etapas li + li {
+  border-left: 1px solid var(--linea);
+}
+
+.etapa {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.etapa:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.etapa:not(:disabled):hover strong {
+  color: var(--acento);
+}
+
+.etapa-num {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--linea-fuerte);
+  font: 600 0.9rem/1 var(--f-titulo);
+  font-variant-numeric: tabular-nums;
+}
+
+.etapa-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.etapa-texto strong {
+  font: 600 1rem/1.2 var(--f-titulo);
+}
+
+.etapa-texto small {
+  font-size: 0.76rem;
+  color: var(--tinta-3);
+}
+
+.etapa[aria-current='step'] {
+  background: var(--acento-suave);
+  box-shadow: inset 0 -3px 0 var(--acento);
+}
+
+.etapa[aria-current='step'] .etapa-num {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: var(--acento-tinta);
+}
+
+.etapa[aria-current='step'] strong {
+  color: var(--acento);
+}
+
+.boton.grande {
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.boton[aria-pressed='true'] {
+  border-color: var(--acento);
+  background: var(--acento-suave);
+  color: var(--acento);
+}
+
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Etapa 1: datos */
+.inicio,
+.etapa-ejercicio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 1040px) {
+  .inicio {
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr);
+  }
+  .etapa-ejercicio {
+    grid-template-columns: minmax(340px, 0.95fr) minmax(0, 1.05fr);
+  }
+}
+
+.inicio-principal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.zona-archivo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 34px 20px;
+  border: 2px dashed var(--linea-fuerte);
+  border-radius: var(--radio);
+  background: var(--hoja-2);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.zona-archivo:hover,
+.zona-archivo.activa {
+  border-color: var(--acento);
+  background: var(--acento-suave);
+}
+
+.zona-archivo:focus-within {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+
+.zona-archivo input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.zona-icono {
+  color: var(--acento);
+  margin-bottom: 2px;
+}
+
+.zona-archivo strong {
+  font: 600 1.15rem/1.3 var(--f-titulo);
+}
+
+.zona-archivo span {
+  font-size: 0.9rem;
+  color: var(--tinta-2);
+}
+
+.zona-archivo u {
+  color: var(--acento);
+  text-underline-offset: 2px;
+}
+
+.zona-archivo small {
+  font-size: 0.8rem;
+  color: var(--tinta-3);
+  max-width: 52ch;
+}
+
+.otras-formas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.mapeo {
+  overflow: auto;
+  max-height: 440px;
+  border: 1px solid var(--linea);
+  border-radius: 5px;
+}
+
+.mapeo table {
+  border-collapse: collapse;
+  font-family: var(--f-datos);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 100%;
+}
+
+.mapeo th,
+.mapeo td {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--linea);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mapeo thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--hoja-2);
+  vertical-align: bottom;
+  padding-block: 8px;
+  font-family: var(--f-texto);
+  font-weight: 500;
+  min-width: 96px;
+}
+
+.mapeo thead select {
+  font-family: var(--f-datos);
+  font-weight: 600;
+  padding: 4px 6px;
+}
+
+.mapeo thead th.num-fila,
+.mapeo .num-fila {
+  min-width: 0;
+  color: var(--tinta-3);
+  text-align: center;
+}
+
+.mapeo-enc {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--tinta-2);
+  text-align: left;
+  white-space: normal;
+}
+
+.mapeo .rol-y {
+  background: var(--acento-suave);
+}
+
+.mapeo thead th.rol-y {
+  box-shadow: inset 0 -3px 0 var(--acento);
+}
+
+.mapeo td.rol-ignorar {
+  color: var(--tinta-3);
+  opacity: 0.6;
+}
+
+.mapeo td.invalida {
+  background: var(--error-suave);
+  color: var(--error);
+  opacity: 1;
+}
+
+.lectura-variables {
+  font-size: 0.9rem;
+}
+
+.lectura-variables b {
+  font-family: var(--f-datos);
+  color: var(--acento);
+}
+
+.ejemplos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.ejemplo {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--hoja-2);
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.ejemplo:hover {
+  border-color: var(--acento);
+}
+
+.ejemplo strong {
+  font: 600 0.95rem/1.25 var(--f-titulo);
+}
+
+.ejemplo:hover strong {
+  color: var(--acento);
+}
+
+.ejemplo-enunciado {
+  font-size: 0.8rem;
+  color: var(--tinta-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ejemplo small {
+  font-family: var(--f-datos);
+  font-size: 0.72rem;
+  color: var(--tinta-3);
+}
+
+/* Etapa 2: ejercicio */
+.variables {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.variables-fila {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.variables dt {
+  min-width: 2em;
+  font-family: var(--f-datos);
+  font-weight: 600;
+  color: var(--acento);
+}
+
+.variables dd {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.literales {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.literal {
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 9px 12px;
+  background: var(--hoja);
+}
+
+.literal.activo {
+  border-color: color-mix(in srgb, var(--acento) 55%, var(--linea));
+  background: color-mix(in srgb, var(--acento-suave) 55%, var(--hoja));
+}
+
+.literal-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.literal-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.literal-check input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--acento);
+}
+
+.literal-letra {
+  flex: none;
+  min-width: 1.6em;
+  font: 600 1.05rem/1 var(--f-titulo);
+  color: var(--acento);
+}
+
+.literal-titulo {
+  font-weight: 500;
+}
+
+.literal:not(.activo) .literal-titulo {
+  color: var(--tinta-2);
+}
+
+.literal-orden {
+  flex: none;
+  display: flex;
+  gap: 4px;
+}
+
+.literal-param {
+  margin: 10px 0 2px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.literal-param .campo {
+  max-width: 220px;
+}
+
+.literal-param .fila-campos .campo {
+  max-width: none;
+}
+
+/* Etapa 3: solución */
+.solucion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 1040px) {
+  .solucion {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+  .indice {
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 1039px) {
+  .indice ol ol {
+    display: none;
+  }
+}
+
+.indice {
+  background: var(--hoja);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 12px 8px;
+  min-width: 0;
+}
+
+.indice-titulo {
+  display: block;
+  padding: 0 8px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+.indice ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.indice button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.indice-seccion {
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.indice-seccion b {
+  flex: none;
+  min-width: 1.5em;
+  font-family: var(--f-titulo);
+  color: var(--acento);
+}
+
+.indice-seccion:hover,
+.indice ol ol button:hover {
+  color: var(--acento);
+}
+
+.indice li.activa > .indice-seccion {
+  background: var(--acento-suave);
+  color: var(--acento);
+}
+
+.indice ol ol {
+  margin: 2px 0 6px 30px;
+}
+
+.indice ol ol button {
+  padding: 2px 6px;
+  font-size: 0.78rem;
+  color: var(--tinta-2);
+  line-height: 1.35;
+}
+
+.documento {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.solucion-cabecera {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+
+.solucion-cabecera-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 80ch;
+}
+
+.solucion-cabecera h2 {
+  font: 600 1.3rem/1.2 var(--f-titulo);
+}
+
+.literal-seccion {
+  scroll-margin-top: 12px;
+}
+
+.literal-marca {
+  font: 600 1.35rem/1.2 var(--f-titulo);
+  color: var(--acento);
+  text-align: center;
+}
+
+.literal-aviso {
+  margin: 14px 18px 0 calc(var(--margen-paso) + 18px);
+}
+
+.literal-grafica {
+  padding: 0 18px 18px calc(var(--margen-paso) + 18px);
+}
+
+.respuesta-literal {
+  position: relative;
+  margin: 0 16px 18px calc(var(--margen-paso) + 16px);
+  padding: 12px 14px;
+  border: 1.5px solid var(--acento);
+  border-radius: var(--radio);
+  background: var(--hoja);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.respuesta-etiqueta {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+
+.resumen {
+  gap: 14px;
+}
+
+.resumen-item {
+  border-top: 1px solid var(--linea);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.resumen-item h3 {
+  font: 600 1.05rem/1.3 var(--f-titulo);
+  display: flex;
+  gap: 6px;
+}
+
+@media (max-width: 720px) {
+  .etapas {
+    grid-template-columns: 1fr;
+  }
+  .etapas li + li {
+    border-left: 0;
+    border-top: 1px solid var(--linea);
+  }
+  .etapa-texto small {
+    display: none;
+  }
+  .literal-param {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .literal-aviso {
+    margin: 12px 12px 0 calc(var(--margen-paso) + 12px);
+  }
+  .literal-grafica {
+    padding: 0 12px 14px;
+  }
+  .respuesta-literal {
+    margin: 0 10px 14px calc(var(--margen-paso) + 8px);
+  }
+}
+
+/* ───────────── impresión: solo la solución, en papel claro ───────────── */
+
+@media print {
+  /* Más específico que los temas oscuros, para imprimir siempre en claro. */
+  html:root:not([data-imprimir]) {
+    --papel: #ffffff;
+    --hoja: #ffffff;
+    --hoja-2: #f7f9f5;
+    --cuadricula: transparent;
+    --tinta: #000000;
+    --tinta-2: #333333;
+    --tinta-3: #555555;
+    --linea: #cccccc;
+    --linea-fuerte: #999999;
+    --acento: #1d3c9e;
+    --acento-tinta: #ffffff;
+    --acento-suave: #eef1fb;
+    --resaltador: #fff3a8;
+    --margen: #e2b3aa;
+    --si: #0f5c37;
+    --si-suave: #e8f5ed;
+    --no: #7a4600;
+    --no-suave: #fbf2e0;
+    --sombra: none;
+    color-scheme: light;
+  }
+  body {
+    font-size: 12px;
+  }
+  .cabecera,
+  .modulos,
+  .etapas,
+  .indice,
+  .pie,
+  .no-imprimir {
+    display: none !important;
+  }
+  .app {
+    padding: 0;
+    max-width: none;
+  }
+  .solucion {
+    display: block;
+  }
+  .documento {
+    gap: 10px;
+  }
+  .procedimiento,
+  .tarjeta {
+    box-shadow: none;
+  }
+  .formula,
+  .tabla-cont,
+  .resultado,
+  .conclusion,
+  .respuesta-literal,
+  .resumen-item,
+  .literal-grafica {
+    break-inside: avoid;
+  }
+  .paso-cabeza,
+  .porque,
+  .procedimiento-cabecera {
+    break-after: avoid;
+  }
+  .formula,
+  .tabla-cont,
+  .resultado {
+    overflow: visible;
+    background: none;
+  }
+}

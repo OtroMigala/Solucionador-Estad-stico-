@@ -129,7 +129,7 @@ export function ecuacionTex(beta: number[], f: Formato, simple: boolean): string
   return s;
 }
 
-function ecuacionTexto(beta: number[], f: Formato, simple: boolean): string {
+export function ecuacionTexto(beta: number[], f: Formato, simple: boolean): string {
   let s = `ŷ = ${fmt(beta[0], f)}`;
   beta.slice(1).forEach((bj, j) => {
     const v = simple ? 'x' : xs(j + 1);
@@ -138,7 +138,7 @@ function ecuacionTexto(beta: number[], f: Formato, simple: boolean): string {
   return s;
 }
 
-interface Anova {
+export interface Anova {
   yGorro: number[];
   mediaY: number;
   SCR: number;
@@ -224,48 +224,73 @@ function bloquesAnova(a: Anova, f: Formato, n: number, k: number): Bloque[] {
       `F_c = \\frac{CMR}{CME} = ${frac(fmtTex(a.CMR, f), fmtTex(a.CME, f))} = ${fmtTex(a.F, f)}`,
       `Fc = CMR/CME = ${fmt(a.F, f)}`,
     ),
-    {
-      tipo: 'tabla',
-      columnas: [
-        { titulo: 'Fuente de variación', alinear: 'izq' },
-        { titulo: 'Suma de cuadrados' },
-        { titulo: 'Grados de libertad' },
-        { titulo: 'Cuadrado medio' },
-        { titulo: 'F calculado' },
-      ],
-      filas: [
-        ['Regresión', `SCR = ${fmt(a.SCR, f)}`, `${k === 1 ? '1' : `k = ${a.glR}`}`, `CMR = ${fmt(a.CMR, f)}`, `Fc = ${fmt(a.F, f)}`],
-        ['Error', `SCE = ${fmt(a.SCE, f)}`, `${k === 1 ? 'n − 2' : 'n − (k + 1)'} = ${a.glE}`, `CME = ${fmt(a.CME, f)}`, ''],
-        ['Total', `SCT = ${fmt(a.SCT, f)}`, `n − 1 = ${a.glT}`, '', ''],
-      ],
-      nota: `n = ${n}`,
-    },
+    tablaAnova(a, f, n, k),
   ];
 }
 
-function pasoPrueba(a: Anova, op: OpcionesRegresion, k: number, nombreY: string): Paso {
-  const f = op.formato;
-  const alfaTex = fmtTex(op.alfa, { ...f, decimales: 6 });
-  const alfaTxt = fmt(op.alfa, { ...f, decimales: 6 });
+/** Tabla ANOVA con fuente, sumas de cuadrados, grados de libertad, cuadrados medios y F. */
+export function tablaAnova(a: Anova, f: Formato, n: number, k: number): Bloque {
+  return {
+    tipo: 'tabla',
+    columnas: [
+      { titulo: 'Fuente de variación', alinear: 'izq' },
+      { titulo: 'Suma de cuadrados' },
+      { titulo: 'Grados de libertad' },
+      { titulo: 'Cuadrado medio' },
+      { titulo: 'F calculado' },
+    ],
+    filas: [
+      ['Regresión', `SCR = ${fmt(a.SCR, f)}`, `${k === 1 ? '1' : `k = ${a.glR}`}`, `CMR = ${fmt(a.CMR, f)}`, `Fc = ${fmt(a.F, f)}`],
+      ['Error', `SCE = ${fmt(a.SCE, f)}`, `${k === 1 ? 'n − 2' : 'n − (k + 1)'} = ${a.glE}`, `CME = ${fmt(a.CME, f)}`, ''],
+      ['Total', `SCT = ${fmt(a.SCT, f)}`, `n − 1 = ${a.glT}`, '', ''],
+    ],
+    nota: `n = ${n}`,
+  };
+}
+
+/** Hipótesis de la prueba F, en LaTeX y en texto plano. */
+export function hipotesisF(k: number): { latex: string; texto: string } {
   const h0 =
     k === 1
       ? '\\beta_1 = 0'
       : Array.from({ length: k }, (_, j) => `\\beta_{${j + 1}}`).join(' = ') + ' = 0';
   const h1 = k === 1 ? '\\beta_1 \\neq 0' : '\\text{al menos un } \\beta_j \\neq 0';
-  const conclusion = a.rechazaH0
+  return {
+    latex: `H_0: ${h0} \\qquad H_1: ${h1}`,
+    texto: `H₀: ${k === 1 ? 'β₁ = 0' : 'β₁ = … = βₖ = 0'}; H₁: ${k === 1 ? 'β₁ ≠ 0' : 'al menos un βⱼ ≠ 0'}`,
+  };
+}
+
+/** Decisión redactada de la prueba F. */
+export function decisionF(a: Anova, alfa: number, f: Formato, k: number, nombreY: string): string {
+  const alfaTxt = fmt(alfa, { ...f, decimales: 6 });
+  return a.rechazaH0
     ? k === 1
       ? `Como Fc = ${fmt(a.F, f)} > ${fmt(a.Fcritico, f)}, se rechaza H₀: la variable regresora x aporta significativamente a explicar ${nombreY} (α = ${alfaTxt}).`
       : `Como Fc = ${fmt(a.F, f)} > ${fmt(a.Fcritico, f)}, se rechaza H₀: al menos una de las variables regresoras aporta significativamente al modelo de ${nombreY} (α = ${alfaTxt}).`
     : k === 1
       ? `Como Fc = ${fmt(a.F, f)} ≤ ${fmt(a.Fcritico, f)}, no se rechaza H₀: con α = ${alfaTxt} no hay evidencia de que x aporte a explicar ${nombreY}.`
       : `Como Fc = ${fmt(a.F, f)} ≤ ${fmt(a.Fcritico, f)}, no se rechaza H₀: con α = ${alfaTxt} no hay evidencia de que alguna variable regresora aporte al modelo.`;
+}
+
+/** Interpretación del coeficiente de determinación. */
+export function interpretacionR2(R2: number, f: Formato, k: number, nombreY: string): string {
+  return `${k === 1 ? 'La variable regresora explica' : 'Las variables regresoras explican'} el ${fmtPct(R2, f)} de la variabilidad de ${nombreY}; el ${fmtPct(1 - R2, f)} restante se debe a otros factores no incluidos en el modelo.`;
+}
+
+function pasoPrueba(a: Anova, op: OpcionesRegresion, k: number, nombreY: string): Paso {
+  const f = op.formato;
+  const alfaTex = fmtTex(op.alfa, { ...f, decimales: 6 });
+  const alfaTxt = fmt(op.alfa, { ...f, decimales: 6 });
+  const h = hipotesisF(k);
   return paso({
     titulo: 'Prueba de hipótesis F',
     metodo: k === 1 ? 'anova-simple' : 'anova-multiple',
+    parte: 'prueba',
     porque:
       'Si H₀ fuera cierta, CMR y CME estimarían la misma varianza y F estaría cerca de 1. Un F grande indica que el modelo explica más variación de la que se esperaría por azar; por eso se rechaza H₀ solo en la cola superior de la distribución F.',
     bloques: [
-      b.formula(`H_0: ${h0} \\qquad H_1: ${h1}`, `H₀: ${k === 1 ? 'β₁ = 0' : 'β₁ = … = βₖ = 0'}; H₁: ${k === 1 ? 'β₁ ≠ 0' : 'al menos un βⱼ ≠ 0'}`),
+      b.formula(h.latex, h.texto),
       b.formula(
         `F_{\\alpha;\\,${k === 1 ? '1' : 'k'};\\,${k === 1 ? 'n-2' : 'n-k-1'}} = F_{${alfaTex};\\,${a.glR};\\,${a.glE}} = ${fmtTex(a.Fcritico, f)}`,
         `F(α = ${alfaTxt}; ${a.glR}; ${a.glE}) = ${fmt(a.Fcritico, f)} (valor de tabla)`,
@@ -273,7 +298,7 @@ function pasoPrueba(a: Anova, op: OpcionesRegresion, k: number, nombreY: string)
       b.texto(
         `Regla de decisión: se rechaza \\(H_0\\) si \\(F_c > F_{\\alpha}\\). Aquí \\(F_c = ${fmtTex(a.F, f)} ${a.rechazaH0 ? '>' : '\\leq'} ${fmtTex(a.Fcritico, f)}\\).`,
       ),
-      b.conclusion(conclusion, a.rechazaH0 ? 'afirmativo' : 'negativo'),
+      b.conclusion(decisionF(a, op.alfa, f, k, nombreY), a.rechazaH0 ? 'afirmativo' : 'negativo'),
     ],
   });
 }
@@ -282,6 +307,7 @@ function pasoR2(a: Anova, f: Formato, k: number, nombreY: string): Paso {
   return paso({
     titulo: 'Coeficiente de determinación R²',
     metodo: 'r2',
+    parte: 'r2',
     porque:
       'R² es la fracción de la variación total de y (SCT) que el modelo logra explicar (SCR). Va de 0 (el modelo no explica nada) a 1 (explica todo).',
     bloques: [
@@ -290,9 +316,7 @@ function pasoR2(a: Anova, f: Formato, k: number, nombreY: string): Paso {
         `R² = SCR/SCT = ${fmt(a.SCR, f)}/${fmt(a.SCT, f)} = ${fmt(a.R2, f)}`,
       ),
       b.resultado(`R^2 = ${fmtTex(a.R2, f)} \\;\\Rightarrow\\; ${fmtPctTex(a.R2, f)}`, `R² = ${fmt(a.R2, f)} (${fmtPct(a.R2, f)})`),
-      b.conclusion(
-        `${k === 1 ? 'La variable regresora explica' : 'Las variables regresoras explican'} el ${fmtPct(a.R2, f)} de la variabilidad de ${nombreY}; el ${fmtPct(1 - a.R2, f)} restante se debe a otros factores no incluidos en el modelo.`,
-      ),
+      b.conclusion(interpretacionR2(a.R2, f, k, nombreY)),
     ],
   });
 }
@@ -316,6 +340,7 @@ function pasoPrediccion(beta: number[], x0: number[], f: Formato, simple: boolea
     paso: paso({
       titulo: 'Predicción',
       metodo: simple ? 'estimadores-simple' : 'forma-matricial',
+      parte: 'prediccion',
       porque: 'Para predecir se reemplazan los valores dados de las variables regresoras en la ecuación ajustada.',
       bloques: [
         b.texto(`Valores dados: ${valoresTxt}.`),
@@ -382,6 +407,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Modelo y datos',
       metodo: 'ecuaciones-normales-simple',
+      parte: 'planteamiento',
       porque:
         'El modelo supone que y se relaciona linealmente con x más un error aleatorio ε con media cero. Los parámetros β₀ y β₁ son desconocidos y se estiman con los datos.',
       bloques: bloqueModelo(d, true),
@@ -392,6 +418,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Tabla de productos y sumas',
       metodo: 'ecuaciones-normales-simple',
+      parte: 'planteamiento',
       porque:
         'Todas las fórmulas siguientes solo necesitan sumas: Σx, Σy, Σx², Σy² y Σxy. Por eso primero se construye la tabla con cada producto y se suma cada columna.',
       bloques: [
@@ -409,6 +436,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Medias',
       metodo: 'covarianza',
+      parte: 'planteamiento',
       bloques: [
         b.formula(
           `\\bar{x} = \\frac{\\sum x_i}{n} = ${frac(fmtTex(sumX, f), n)} = ${fmtTex(mx, f)},\\qquad \\bar{y} = \\frac{\\sum y_i}{n} = ${frac(fmtTex(sumY, f), n)} = ${fmtTex(my, f)}`,
@@ -422,6 +450,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Covarianza',
       metodo: 'covarianza',
+      parte: 'correlacion',
       porque:
         'La covarianza mide cómo varían juntas x e y: es positiva si tienden a crecer juntas y negativa si una crece cuando la otra decrece. Sus unidades son las de x por las de y, así que su tamaño no indica qué tan fuerte es la relación.',
       bloques: [
@@ -448,6 +477,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Desviaciones estándar',
       metodo: 'pearson',
+      parte: 'correlacion',
       porque: 'Se calculan con el mismo divisor n de la covarianza, para que r quede entre −1 y 1.',
       bloques: [
         b.formula(
@@ -466,6 +496,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Coeficiente de correlación de Pearson',
       metodo: 'pearson',
+      parte: 'correlacion',
       porque:
         'Al dividir la covarianza entre SₓSᵧ desaparecen las unidades y el resultado queda entre −1 y 1: el signo da el sentido de la relación y el valor absoluto su fuerza.',
       bloques: [
@@ -483,6 +514,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Ecuaciones normales',
       metodo: 'ecuaciones-normales-simple',
+      parte: 'parametros',
       porque:
         'Los estimadores de mínimos cuadrados son los que hacen mínima la suma de los errores al cuadrado, Σ(yᵢ − β₀ − β₁xᵢ)². Al derivar respecto a β₀ y β₁ e igualar a cero se obtiene este sistema de dos ecuaciones.',
       bloques: [
@@ -510,6 +542,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Estimadores de mínimos cuadrados',
       metodo: 'estimadores-simple',
+      parte: 'parametros',
       porque:
         'Resolviendo el sistema de ecuaciones normales se obtienen estas fórmulas cerradas: primero la pendiente β̂₁ y luego el intercepto β̂₀, que hace que la recta pase por el punto (x̄, ȳ).',
       bloques: [
@@ -533,6 +566,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Valores ajustados y residuos',
       metodo: 'anova-simple',
+      parte: 'anova',
       porque: 'Con la recta se calcula ŷᵢ para cada xᵢ. Las diferencias al cuadrado respecto a ȳ y a ŷᵢ dan las sumas de cuadrados de la tabla ANOVA.',
       bloques: [tablaAjustados(y, a, f, x)],
     }),
@@ -542,6 +576,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
     paso({
       titulo: 'Tabla ANOVA',
       metodo: 'anova-simple',
+      parte: 'anova',
       porque:
         'La variación total de y (SCT) se divide en la parte que explica la recta (SCR) y la que queda sin explicar alrededor de ella (SCE): SCT = SCR + SCE. Al dividir cada suma entre sus grados de libertad se obtienen cuadrados medios comparables.',
       bloques: bloquesAnova(a, f, n, 1),
@@ -667,6 +702,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Modelo y datos',
       metodo: 'ecuaciones-normales-multiple',
+      parte: 'planteamiento',
       porque:
         'Cuando y depende de varias variables, el modelo incluye un coeficiente βⱼ por cada una: βⱼ es el cambio promedio de y cuando xⱼ aumenta una unidad y las demás x se mantienen fijas.',
       bloques: bloqueModelo(d, false),
@@ -688,6 +724,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Tabla de productos y sumas',
       metodo: 'ecuaciones-normales-multiple',
+      parte: 'planteamiento',
       porque:
         'Las ecuaciones normales usan las sumas de cada variable, de sus cuadrados, de los productos entre ellas y de sus productos con y. La tabla las reúne todas.',
       bloques: [
@@ -726,6 +763,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Ecuaciones normales',
       metodo: 'ecuaciones-normales-multiple',
+      parte: 'parametros',
       porque:
         'Igual que en la regresión simple, se minimiza la suma de los errores al cuadrado. Al derivar respecto a cada uno de los k + 1 parámetros e igualar a cero se obtiene un sistema de k + 1 ecuaciones lineales.',
       bloques: [
@@ -741,6 +779,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Forma matricial',
       metodo: 'forma-matricial',
+      parte: 'parametros',
       porque:
         'El mismo sistema se escribe como (X\'X)β̂ = X\'y. X tiene una columna de unos (para β₀) y una columna por variable; cada entrada de X\'X es una de las sumas de la tabla, por eso A = X\'X coincide con los coeficientes de las ecuaciones normales.',
       bloques: [
@@ -758,6 +797,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Inversa de X\'X por Gauss-Jordan',
       metodo: 'forma-matricial',
+      parte: 'parametros',
       porque:
         'Para despejar β̂ hay que multiplicar por (X\'X)⁻¹. Gauss-Jordan convierte [X\'X | I] en [I | (X\'X)⁻¹]: cada operación de fila que lleva X\'X a la identidad, aplicada a I, construye la inversa.',
       bloques: [
@@ -772,6 +812,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Estimadores β̂ = (X\'X)⁻¹X\'y',
       metodo: 'forma-matricial',
+      parte: 'parametros',
       porque: 'Cada β̂ⱼ es la fila j de la inversa multiplicada por el vector g = X\'y.',
       bloques: [
         b.formula(
@@ -796,6 +837,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Valores ajustados y residuos',
       metodo: 'anova-multiple',
+      parte: 'anova',
       porque: 'Con la ecuación ajustada se calcula ŷᵢ para cada observación. Las columnas al cuadrado dan las sumas SCT, SCR y SCE.',
       bloques: [tablaAjustados(y, a, f)],
     }),
@@ -805,6 +847,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Tabla ANOVA',
       metodo: 'anova-multiple',
+      parte: 'anova',
       porque:
         'La variación total de y (SCT) se reparte entre lo que explica el modelo (SCR) y lo que queda sin explicar (SCE). Los grados de libertad son k para la regresión, n − (k + 1) para el error y n − 1 en total.',
       bloques: bloquesAnova(a, f, n, k),
@@ -818,6 +861,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
     paso({
       titulo: 'Varianza de los estimadores',
       metodo: 'varianza-estimadores',
+      parte: 'varianzas',
       porque:
         'Los β̂ⱼ cambian de una muestra a otra: son variables aleatorias. Su varianza es cⱼⱼσ², con cⱼⱼ en la diagonal de (X\'X)⁻¹. Como σ² es desconocida, se estima con S² = CME.',
       bloques: [

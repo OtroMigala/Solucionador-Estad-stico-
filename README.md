@@ -9,6 +9,22 @@ Cada paso muestra la fórmula, la sustitución de valores, el resultado, una
 explicación de **por qué** se hace y la diapositiva de donde sale el método.
 La propuesta completa está en [`docs/propuesta.md`](docs/propuesta.md).
 
+## Cómo se usa (regresión)
+
+1. **Datos.** Arrastra el Excel (.xlsx) o un CSV con la tabla del ejercicio, pega
+   las celdas copiadas, escríbelas a mano o abre uno de los puntos del taller.
+   El programa busca la tabla dentro de la hoja aunque tenga títulos o una fila
+   de totales, ignora la hoja de resumen que genera la herramienta de regresión
+   de Excel y sugiere, por los encabezados (y, x1, x₂, «Días (x2)»…), qué columna
+   es y y cuáles son las x. Se confirma o corrige antes de seguir.
+2. **Ejercicio.** Se marcan los literales que pide el enunciado, en su orden
+   (parámetros, tabla ANOVA, prueba de hipótesis con su α, R², predicción con
+   los valores de las x…).
+3. **Solución.** Un planteamiento (modelo y tabla de sumas) y luego un literal
+   por pregunta: a), b), c)…, cada uno con sus pasos y un recuadro con la
+   respuesta. Al final, el resumen de respuestas. Se puede imprimir o guardar
+   en PDF.
+
 ## Qué resuelve
 
 **Regresión lineal** (puntos 1–4 del taller, y los ejemplos de clase de los
@@ -52,9 +68,10 @@ con fracciones exactas:
 │   │   ├── formato.ts       # Formato de números (texto y LaTeX)
 │   │   ├── racional.ts      # Fracciones exactas (BigInt)
 │   │   ├── entrada.ts       # Lectura de números, fracciones y tablas pegadas
+│   │   ├── importar/        # Lectura de .xlsx y .csv y detección de la tabla de datos
 │   │   ├── latex.ts         # Constructores de fórmulas
 │   │   ├── linalg/          # Transpuesta, producto, inversa por Gauss-Jordan
-│   │   ├── regresion/       # Regresión simple y múltiple + ejemplos
+│   │   ├── regresion/       # Regresión simple y múltiple, organización por literales y ejemplos
 │   │   ├── combinatoria/    # Técnicas de conteo
 │   │   ├── probabilidad/    # Herramientas de probabilidad + 36 puntos del taller
 │   │   └── distribuciones/  # Valor crítico de la distribución F

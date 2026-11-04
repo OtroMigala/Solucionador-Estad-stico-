@@ -17,7 +17,7 @@ function CeldaVista({ c }: { c: Celda }) {
   return typeof c === 'string' ? <>{c}</> : <FormulaEnLinea latex={c.latex} />;
 }
 
-function BloqueVista({ b }: { b: Bloque }) {
+export function BloqueVista({ b }: { b: Bloque }) {
   switch (b.tipo) {
     case 'texto':
       return (
@@ -104,16 +104,16 @@ function BloqueVista({ b }: { b: Bloque }) {
   }
 }
 
-export const PasoVista = memo(function PasoVista({ paso, n }: { paso: Paso; n: number }) {
+export const PasoVista = memo(function PasoVista({ paso, n, id = `paso-${n}` }: { paso: Paso; n: number; id?: string }) {
   const m = REGISTRO[paso.metodo];
   return (
-    <section className="paso" aria-labelledby={`paso-${n}`}>
+    <section className="paso" aria-labelledby={id}>
       <div className="paso-num" aria-hidden="true">
         {n}
       </div>
       <div className="paso-cuerpo">
         <div className="paso-cabeza">
-          <h3 className="paso-titulo" id={`paso-${n}`}>
+          <h3 className="paso-titulo" id={id}>
             {paso.titulo}
           </h3>
           <span className="paso-ref" title={`${m.nombre} · ${m.presentacion}`}>
