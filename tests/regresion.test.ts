@@ -3,6 +3,7 @@ import fixtures from '../validation/fixtures/regresion.json';
 import { EJEMPLOS_REGRESION } from '../src/core/regresion/ejemplos';
 import { resolverRegresion, interpretarPearson } from '../src/core/regresion';
 import { FORMATO_BASE } from '../src/core/formato';
+import { datosSinteticos } from './sinteticos';
 
 type Ref = (typeof fixtures)[keyof typeof fixtures] & { prediccion?: number; cov?: number; r?: number };
 
@@ -122,5 +123,16 @@ describe('pasos y validación de entradas', () => {
     expect(interpretarPearson(-0.6)).toMatch(/moderada negativa/);
     expect(interpretarPearson(0.2)).toMatch(/débil/);
     expect(interpretarPearson(1)).toMatch(/perfecta/);
+  });
+});
+
+describe('muchas variables', () => {
+  it('con k = 16 los β̂ cumplen las ecuaciones normales y SCR + SCE = SCT', () => {
+    const { y, x } = datosSinteticos(40, 16);
+    const r = resolverRegresion({ y, x }, { alfa: 0.05, x0: null, formato: FORMATO_BASE });
+    if (!r.ok) throw new Error(r.error);
+    const s = r.solucion.resultado;
+    s.XtX.forEach((fila, i) => cerca(fila.reduce((acc, v, j) => acc + v * s.beta[j], 0), s.Xty[i], 1e-9));
+    cerca(s.SCR + s.SCE, s.SCT, 1e-9);
   });
 });

@@ -1,10 +1,11 @@
 import { memo, useMemo } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import { OPCIONES_KATEX } from '../core/latex';
 
 function render(latex: string, display: boolean): string | null {
   try {
-    return katex.renderToString(latex, { throwOnError: true, displayMode: display, strict: 'ignore', output: 'html' });
+    return katex.renderToString(latex, { ...OPCIONES_KATEX, throwOnError: true, displayMode: display, strict: 'ignore', output: 'html' });
   } catch {
     return null;
   }

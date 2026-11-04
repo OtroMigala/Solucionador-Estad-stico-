@@ -1,6 +1,6 @@
 import { parseNumero } from '../../core/entrada';
 import type { Formato } from '../../core/formato';
-import { type OpcionesRegresion, type ResultadoRegresion, resolverRegresion } from '../../core/regresion';
+import { type DatosRegresion, type OpcionesRegresion, type ResultadoRegresion, resolverRegresion } from '../../core/regresion';
 import type { EjemploRegresion } from '../../core/regresion/ejemplos';
 import { type Literal, literalesDisponibles, literalesPorDefecto } from '../../core/regresion/literales';
 import type { Solucion } from '../../core/steps';
@@ -67,7 +67,7 @@ export function literalesValidos(e: Ejercicio): Literal[] {
 }
 
 export type Calculo =
-  | { ok: true; solucion: Solucion<ResultadoRegresion>; op: OpcionesRegresion; literales: Literal[] }
+  | { ok: true; solucion: Solucion<ResultadoRegresion>; datos: DatosRegresion; op: OpcionesRegresion; literales: Literal[] }
   | { ok: false; error: string };
 
 export function calcular(e: Ejercicio, formato: Formato): Calculo {
@@ -87,5 +87,5 @@ export function calcular(e: Ejercicio, formato: Formato): Calculo {
   const r = resolverRegresion(datos, op);
   // Los problemas de los datos se avisan antes que los valores que faltan para predecir.
   if (r.ok && faltaX0) return { ok: false, error: 'Para la predicción escribe el valor de cada variable x, o quita la predicción de la lista.' };
-  return r.ok ? { ok: true, solucion: r.solucion, op, literales } : r;
+  return r.ok ? { ok: true, solucion: r.solucion, datos, op, literales } : r;
 }

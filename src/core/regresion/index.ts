@@ -120,13 +120,60 @@ export function resolverRegresion(d: DatosRegresion, op: OpcionesRegresion): Res
 
 /* ────────────────────────── piezas comunes ────────────────────────── */
 
+/**
+ * Con más variables regresoras que esto, la solución se muestra compacta: las
+ * tablas y sistemas que crecen con k² quedan en desplegables y las sumas
+ * largas se abrevian con «…».
+ */
+export const K_COMPACTO = 5;
+const TERMINOS_POR_LINEA = 4;
+
+/** «= primero + términos» como filas de un entorno aligned, con cuatro términos por fila. */
+function filasDeSuma(primero: string, terminos: string[]): string {
+  const filas: string[] = [];
+  for (let i = 0; i < terminos.length; i += TERMINOS_POR_LINEA) filas.push(terminos.slice(i, i + TERMINOS_POR_LINEA).join(''));
+  return `&= ${primero}${filas[0] ?? ''} ${filas
+    .slice(1)
+    .map((l) => `\\\\ &\\quad ${l}`)
+    .join(' ')}`;
+}
+
+/** «izq = primero + términos», partido en varias líneas alineadas si hay más de cuatro términos. */
+function enLineas(izq: string, primero: string, terminos: string[]): string {
+  if (terminos.length <= TERMINOS_POR_LINEA) return `${izq} = ${primero}${terminos.join('')}`;
+  return `\\begin{aligned} ${izq} ${filasDeSuma(primero, terminos)} \\end{aligned}`;
+}
+
+/** t(1) + t(2) + … + t(k), abreviada con \dots cuando k es grande. */
+function sumaGeneral(k: number, t: (j: number) => string, sep = ' + '): string {
+  return k > K_COMPACTO ? `${t(1)}${sep}${t(2)}${sep}\\dots${sep}${t(k)}` : Array.from({ length: k }, (_, j) => t(j + 1)).join(sep);
+}
+
 export function ecuacionTex(beta: number[], f: Formato, simple: boolean): string {
-  let s = `\\hat{y} = ${fmtTex(beta[0], f)}`;
-  beta.slice(1).forEach((bj, j) => {
+  const terminos = beta.slice(1).map((bj, j) => {
     const v = simple ? 'x' : `x_{${j + 1}}`;
-    s += bj < 0 ? ` - ${fmtTex(-bj, f)}\\,${v}` : ` + ${fmtTex(bj, f)}\\,${v}`;
+    return bj < 0 ? ` - ${fmtTex(-bj, f)}\\,${v}` : ` + ${fmtTex(bj, f)}\\,${v}`;
   });
-  return s;
+  return enLineas('\\hat{y}', fmtTex(beta[0], f), terminos);
+}
+
+/** Tabla de los β̂ⱼ con su variable; con interpretación, dice cuánto cambia y por unidad de xⱼ. */
+export function tablaCoeficientes(beta: number[], f: Formato, nombresX?: string[], conInterpretacion = false): Bloque {
+  return {
+    tipo: 'tabla',
+    columnas: [
+      { titulo: 'Estimador', alinear: 'izq' },
+      { titulo: 'Variable', alinear: 'izq' },
+      { titulo: 'Valor' },
+      ...(conInterpretacion ? [{ titulo: 'Si xⱼ aumenta una unidad (las demás fijas), y…', alinear: 'izq' as const }] : []),
+    ],
+    filas: beta.map((bj, j) => [
+      { latex: `\\hat\\beta_{${j}}`, texto: `β̂${subindice(j)}` },
+      j === 0 ? 'intercepto' : `${xs(j)}${nombresX?.[j - 1] ? ` · ${nombresX[j - 1]}` : ''}`,
+      fmt(bj, f),
+      ...(conInterpretacion ? [j === 0 ? '' : `${bj >= 0 ? 'aumenta' : 'disminuye'} en promedio ${fmt(Math.abs(bj), f)}`] : []),
+    ]),
+  };
 }
 
 export function ecuacionTexto(beta: number[], f: Formato, simple: boolean): string {
@@ -250,10 +297,7 @@ export function tablaAnova(a: Anova, f: Formato, n: number, k: number): Bloque {
 
 /** Hipótesis de la prueba F, en LaTeX y en texto plano. */
 export function hipotesisF(k: number): { latex: string; texto: string } {
-  const h0 =
-    k === 1
-      ? '\\beta_1 = 0'
-      : Array.from({ length: k }, (_, j) => `\\beta_{${j + 1}}`).join(' = ') + ' = 0';
+  const h0 = k === 1 ? '\\beta_1 = 0' : sumaGeneral(k, (j) => `\\beta_{${j}}`, ' = ') + ' = 0';
   const h1 = k === 1 ? '\\beta_1 \\neq 0' : '\\text{al menos un } \\beta_j \\neq 0';
   return {
     latex: `H_0: ${h0} \\qquad H_1: ${h1}`,
@@ -324,16 +368,17 @@ function pasoR2(a: Anova, f: Formato, k: number, nombreY: string): Paso {
 function pasoPrediccion(beta: number[], x0: number[], f: Formato, simple: boolean): { paso: Paso; valor: number } {
   const valor = beta[0] + x0.reduce((s, v, j) => s + beta[j + 1] * v, 0);
   const general = simple
-    ? '\\hat{y}_0 = \\hat\\beta_0 + \\hat\\beta_1 x_0'
-    : `\\hat{y}_0 = \\hat\\beta_0 + ${x0.map((_, j) => `\\hat\\beta_{${j + 1}}x_{${j + 1}}`).join(' + ')}`;
-  const sust =
-    fmtTex(beta[0], f) +
-    x0
-      .map((v, j) => {
-        const bj = beta[j + 1];
-        return `${bj < 0 ? ' - ' : ' + '}${fmtTex(Math.abs(bj), f)}\\left(${fmtTex(v, f)}\\right)`;
-      })
-      .join('');
+    ? '\\hat\\beta_0 + \\hat\\beta_1 x_0'
+    : `\\hat\\beta_0 + ${sumaGeneral(x0.length, (j) => `\\hat\\beta_{${j}}x_{${j}}`)}`;
+  const terminos = x0.map((v, j) => {
+    const bj = beta[j + 1];
+    return `${bj < 0 ? ' - ' : ' + '}${fmtTex(Math.abs(bj), f)}\\left(${fmtTex(v, f)}\\right)`;
+  });
+  // Con muchas variables, la sustitución va en varias líneas debajo de la fórmula general.
+  const sustitucion =
+    terminos.length > TERMINOS_POR_LINEA
+      ? `\\begin{aligned} \\hat{y}_0 &= ${general} \\\\ ${filasDeSuma(fmtTex(beta[0], f), terminos)} \\end{aligned}`
+      : `\\hat{y}_0 = ${general} = ${fmtTex(beta[0], f)}${terminos.join('')}`;
   const valoresTxt = x0.map((v, j) => `${simple ? 'x' : xs(j + 1)} = ${fmt(v, f)}`).join(', ');
   return {
     valor,
@@ -344,7 +389,7 @@ function pasoPrediccion(beta: number[], x0: number[], f: Formato, simple: boolea
       porque: 'Para predecir se reemplazan los valores dados de las variables regresoras en la ecuación ajustada.',
       bloques: [
         b.texto(`Valores dados: ${valoresTxt}.`),
-        b.formula(`${general} = ${sust}`, `ŷ₀ = ${fmt(valor, f)}`),
+        b.formula(sustitucion, `ŷ₀ = ${fmt(valor, f)}`),
         b.resultado(`\\hat{y}_0 = ${fmtTex(valor, f)}`, `ŷ₀ = ${fmt(valor, f)}`),
       ],
     }),
@@ -358,8 +403,8 @@ function bloqueModelo(d: DatosRegresion, simple: boolean): Bloque[] {
     simple
       ? b.formula('Y = \\beta_0 + \\beta_1 x + \\varepsilon', 'Y = β₀ + β₁x + ε')
       : b.formula(
-          `Y = \\beta_0 + ${Array.from({ length: k }, (_, j) => `\\beta_{${j + 1}}x_{${j + 1}}`).join(' + ')} + \\varepsilon`,
-          `Y = β₀ + ${Array.from({ length: k }, (_, j) => `β${subindice(j + 1)}${xs(j + 1)}`).join(' + ')} + ε`,
+          `Y = \\beta_0 + ${sumaGeneral(k, (j) => `\\beta_{${j}}x_{${j}}`)} + \\varepsilon`,
+          `Y = β₀ + ${k > K_COMPACTO ? `β₁x₁ + … + β${subindice(k)}${xs(k)}` : Array.from({ length: k }, (_, j) => `β${subindice(j + 1)}${xs(j + 1)}`).join(' + ')} + ε`,
         ),
     b.texto(`n = ${n} observaciones${simple ? '' : `, k = ${k} variables regresoras`}.`),
   ];
@@ -695,6 +740,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
   const a = calcularAnova(y, yGorro, k, op.alfa);
   const varianzas = C.map((fila, i) => fila[i] * a.CME);
   const mediasX = x.map((c) => sumar(c) / n);
+  const compacto = k > K_COMPACTO;
 
   const pasos: Paso[] = [];
 
@@ -719,6 +765,12 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
   }
   for (let j = 0; j < k; j++) columnas.push({ titulo: `${xs(j + 1)}·y`, v: x[j].map((v, t) => v * y[t]) });
   columnas.push({ titulo: 'y²', v: y.map((v) => v * v) });
+  const tablaProductos: Bloque = {
+    tipo: 'tabla',
+    columnas: [{ titulo: 'i', alinear: 'centro' }, ...columnas.map((c) => ({ titulo: c.titulo }))],
+    filas: y.map((_, i) => [String(i + 1), ...columnas.map((c) => fmt(c.v[i], f))]),
+    pie: ['Σ', ...columnas.map((c) => fmt(sumar(c.v), f))],
+  };
 
   pasos.push(
     paso({
@@ -727,14 +779,14 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
       parte: 'planteamiento',
       porque:
         'Las ecuaciones normales usan las sumas de cada variable, de sus cuadrados, de los productos entre ellas y de sus productos con y. La tabla las reúne todas.',
-      bloques: [
-        {
-          tipo: 'tabla',
-          columnas: [{ titulo: 'i', alinear: 'centro' }, ...columnas.map((c) => ({ titulo: c.titulo }))],
-          filas: y.map((_, i) => [String(i + 1), ...columnas.map((c) => fmt(c.v[i], f))]),
-          pie: ['Σ', ...columnas.map((c) => fmt(sumar(c.v), f))],
-        },
-      ],
+      bloques: compacto
+        ? [
+            b.texto(
+              `Con k = ${k} la tabla tiene ${columnas.length} columnas: cada x, y, los cuadrados, los productos entre cada par de x, los productos con y e y². Sus sumas (fila Σ) son las entradas de \\(\\mathbf{X}'\\mathbf{X}\\) y \\(\\mathbf{X}'\\mathbf{y}\\), que aparecen completas en el paso «Forma matricial».`,
+            ),
+            b.detalles(`Ver la tabla completa (${columnas.length} columnas)`, [tablaProductos]),
+          ]
+        : [tablaProductos],
     }),
   );
 
@@ -759,6 +811,17 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
       .join(' '),
     fmtTex(Xty[r], f),
   ]);
+  // Respaldo en texto plano del sistema con números (RNF-03).
+  const lineasNumTexto = XtX.map(
+    (fila, r) =>
+      fila.map((v, c) => `${c === 0 ? (v < 0 ? '−' : '') : v < 0 ? ' − ' : ' + '}${fmt(Math.abs(v), f)}·β̂${subindice(c)}`).join('') +
+      ` = ${fmt(Xty[r], f)}`,
+  ).join('; ');
+  const sistemaCompleto = [
+    b.formula(sistema(lineasGen), 'Sistema general de ecuaciones normales'),
+    b.texto('Reemplazando las sumas de la tabla:'),
+    b.formula(sistema(lineasNum), lineasNumTexto),
+  ];
   pasos.push(
     paso({
       titulo: 'Ecuaciones normales',
@@ -766,11 +829,16 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
       parte: 'parametros',
       porque:
         'Igual que en la regresión simple, se minimiza la suma de los errores al cuadrado. Al derivar respecto a cada uno de los k + 1 parámetros e igualar a cero se obtiene un sistema de k + 1 ecuaciones lineales.',
-      bloques: [
-        b.formula(sistema(lineasGen), 'Sistema general de ecuaciones normales'),
-        b.texto('Reemplazando las sumas de la tabla:'),
-        b.formula(sistema(lineasNum), lineasNum.map(([i, dd]) => `${i} = ${dd}`).join('; ')),
-      ],
+      bloques: compacto
+        ? [
+            b.texto(`Hay una ecuación por cada parámetro, \\(r = 0, 1, \\dots, ${k}\\), con \\(x_0 = 1\\):`),
+            b.formula(
+              `\\hat\\beta_0 \\sum x_r + \\hat\\beta_1 \\sum x_r x_1 + \\hat\\beta_2 \\sum x_r x_2 + \\dots + \\hat\\beta_{${k}} \\sum x_r x_{${k}} = \\sum x_r\\,y`,
+              `β̂₀Σxᵣ + β̂₁Σxᵣx₁ + … + β̂${subindice(k)}Σxᵣx${subindice(k)} = Σxᵣy, r = 0…${k}`,
+            ),
+            b.detalles(`Ver las ${p} ecuaciones`, sistemaCompleto),
+          ]
+        : sistemaCompleto,
     }),
   );
 
@@ -784,7 +852,11 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
         'El mismo sistema se escribe como (X\'X)β̂ = X\'y. X tiene una columna de unos (para β₀) y una columna por variable; cada entrada de X\'X es una de las sumas de la tabla, por eso A = X\'X coincide con los coeficientes de las ecuaciones normales.',
       bloques: [
         b.formula('\\mathbf{y} = \\mathbf{X}\\boldsymbol\\beta + \\boldsymbol\\varepsilon', 'y = Xβ + ε'),
-        b.formula(`\\mathbf{X} = ${matriz(filasX)},\\qquad \\mathbf{y} = ${vectorNum(y, f)}`, 'Matriz X y vector y'),
+        compacto
+          ? b.detalles(`Ver la matriz X (${n} × ${p}) y el vector y`, [
+              b.formula(`\\mathbf{X} = ${matriz(filasX)},\\qquad \\mathbf{y} = ${vectorNum(y, f)}`, 'Matriz X y vector y'),
+            ])
+          : b.formula(`\\mathbf{X} = ${matriz(filasX)},\\qquad \\mathbf{y} = ${vectorNum(y, f)}`, 'Matriz X y vector y'),
         b.formula(
           `A = \\mathbf{X}'\\mathbf{X} = ${matrizNum(XtX, f)},\\qquad g = \\mathbf{X}'\\mathbf{y} = ${vectorNum(Xty, f)}`,
           'A = X\'X y g = X\'y',
@@ -800,11 +872,24 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
       parte: 'parametros',
       porque:
         'Para despejar β̂ hay que multiplicar por (X\'X)⁻¹. Gauss-Jordan convierte [X\'X | I] en [I | (X\'X)⁻¹]: cada operación de fila que lleva X\'X a la identidad, aplicada a I, construye la inversa.',
-      bloques: [
-        b.detalles('Ver las operaciones de fila', bloquesGaussJordan(XtX, inv.etapas, fSig)),
-        b.formula(`C = (\\mathbf{X}'\\mathbf{X})^{-1} = ${matrizNum(C, fSig)}`, '(X\'X)⁻¹'),
-        b.texto('Los elementos de la diagonal, \\(c_{00}, c_{11}, \\dots, c_{kk}\\), se usan más adelante para la varianza de los estimadores.'),
-      ],
+      bloques: compacto
+        ? [
+            b.detalles(`Ver las operaciones de fila (${p} columnas)`, bloquesGaussJordan(XtX, inv.etapas, fSig)),
+            b.detalles(`Ver la inversa completa C = (X'X)⁻¹ (${p} × ${p})`, [
+              b.formula(`C = (\\mathbf{X}'\\mathbf{X})^{-1} = ${matrizNum(C, fSig)}`, '(X\'X)⁻¹'),
+            ]),
+            b.texto('De C se usa sobre todo su diagonal, \\(c_{00}, c_{11}, \\dots, c_{kk}\\), para la varianza de los estimadores:'),
+            {
+              tipo: 'tabla',
+              columnas: [{ titulo: 'j', alinear: 'centro' }, { titulo: 'cⱼⱼ' }],
+              filas: C.map((fila, j) => [String(j), fmt(fila[j], fSig)]),
+            },
+          ]
+        : [
+            b.detalles('Ver las operaciones de fila', bloquesGaussJordan(XtX, inv.etapas, fSig)),
+            b.formula(`C = (\\mathbf{X}'\\mathbf{X})^{-1} = ${matrizNum(C, fSig)}`, '(X\'X)⁻¹'),
+            b.texto('Los elementos de la diagonal, \\(c_{00}, c_{11}, \\dots, c_{kk}\\), se usan más adelante para la varianza de los estimadores.'),
+          ],
     }),
   );
 
@@ -814,22 +899,37 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
       metodo: 'forma-matricial',
       parte: 'parametros',
       porque: 'Cada β̂ⱼ es la fila j de la inversa multiplicada por el vector g = X\'y.',
-      bloques: [
-        b.formula(
-          `\\hat{\\boldsymbol\\beta} = (\\mathbf{X}'\\mathbf{X})^{-1}\\mathbf{X}'\\mathbf{y} = ${matrizNum(C, fSig)}${vectorNum(Xty, f)} = ${matriz(beta.map((v, j) => [`\\hat\\beta_{${j}} = ${fmtTex(v, fSig)}`]))}`,
-          beta.map((v, j) => `β̂${subindice(j)} = ${fmt(v, fSig)}`).join('; '),
-        ),
-        b.resultado(ecuacionTex(beta, fSig, false), ecuacionTexto(beta, fSig, false)),
-        b.texto(
-          beta
-            .slice(1)
-            .map(
-              (bj, j) =>
-                `${xs(j + 1)}${d.nombresX?.[j] ? ` (${d.nombresX[j]})` : ''}: si aumenta una unidad y las demás se mantienen fijas, y ${bj >= 0 ? 'aumenta' : 'disminuye'} en promedio ${fmt(Math.abs(bj), fSig)}.`,
-            )
-            .join(' '),
-        ),
-      ],
+      bloques: compacto
+        ? [
+            b.formula(
+              `\\hat{\\boldsymbol\\beta} = (\\mathbf{X}'\\mathbf{X})^{-1}\\mathbf{X}'\\mathbf{y} = C\\,g,\\qquad \\hat\\beta_j = \\sum_{l=0}^{${k}} c_{jl}\\,g_l`,
+              'β̂ = (X\'X)⁻¹X\'y = C·g; β̂ⱼ = Σ cⱼₗ·gₗ',
+            ),
+            b.detalles('Ver el producto C · g completo', [
+              b.formula(
+                `${matrizNum(C, fSig)}${vectorNum(Xty, f)} = ${matriz(beta.map((v, j) => [`\\hat\\beta_{${j}} = ${fmtTex(v, fSig)}`]))}`,
+                beta.map((v, j) => `β̂${subindice(j)} = ${fmt(v, fSig)}`).join('; '),
+              ),
+            ]),
+            tablaCoeficientes(beta, fSig, d.nombresX, true),
+            b.resultado(ecuacionTex(beta, fSig, false), ecuacionTexto(beta, fSig, false)),
+          ]
+        : [
+            b.formula(
+              `\\hat{\\boldsymbol\\beta} = (\\mathbf{X}'\\mathbf{X})^{-1}\\mathbf{X}'\\mathbf{y} = ${matrizNum(C, fSig)}${vectorNum(Xty, f)} = ${matriz(beta.map((v, j) => [`\\hat\\beta_{${j}} = ${fmtTex(v, fSig)}`]))}`,
+              beta.map((v, j) => `β̂${subindice(j)} = ${fmt(v, fSig)}`).join('; '),
+            ),
+            b.resultado(ecuacionTex(beta, fSig, false), ecuacionTexto(beta, fSig, false)),
+            b.texto(
+              beta
+                .slice(1)
+                .map(
+                  (bj, j) =>
+                    `${xs(j + 1)}${d.nombresX?.[j] ? ` (${d.nombresX[j]})` : ''}: si aumenta una unidad y las demás se mantienen fijas, y ${bj >= 0 ? 'aumenta' : 'disminuye'} en promedio ${fmt(Math.abs(bj), fSig)}.`,
+                )
+                .join(' '),
+            ),
+          ],
     }),
   );
 

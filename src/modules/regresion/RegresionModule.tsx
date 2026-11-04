@@ -101,6 +101,7 @@ export function RegresionModule() {
         <SolucionRegresion
           ejercicio={ejercicio}
           solucion={calculo.solucion}
+          datos={calculo.datos}
           op={calculo.op}
           literales={calculo.literales}
           onEditar={() => ir('ejercicio')}

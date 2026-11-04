@@ -23,7 +23,16 @@ La propuesta completa está en [`docs/propuesta.md`](docs/propuesta.md).
 3. **Solución.** Un planteamiento (modelo y tabla de sumas) y luego un literal
    por pregunta: a), b), c)…, cada uno con sus pasos y un recuadro con la
    respuesta. Al final, el resumen de respuestas. Se puede imprimir o guardar
-   en PDF.
+   en PDF, o **descargar en Excel**: un libro con las hojas Datos, Tabla de
+   sumas (con fórmulas), Matrices, Resumen (con el formato de la herramienta de
+   regresión de Excel: estadísticas, ANOVA, coeficientes con error típico, t,
+   probabilidad e intervalos del 95 %, más la prueba de hipótesis, R² y la
+   predicción) y Respuestas por literal.
+
+Con más de 5 variables x la solución se muestra compacta: la tabla de
+productos, el sistema de ecuaciones, la matriz X, Gauss-Jordan y la inversa
+quedan en desplegables, y los coeficientes se presentan en tabla. Se probó con
+15 y 16 variables contra numpy (error menor a 10⁻⁹).
 
 ## Qué resuelve
 

@@ -2,7 +2,7 @@ import { useState, type ClipboardEvent } from 'react';
 import { parseNumero, parseTablaPegada } from '../../core/entrada';
 import { subindice } from '../../core/formato';
 
-export const MAX_X = 8;
+export const MAX_X = 20;
 
 export interface DatosTabla {
   nombreY: string;

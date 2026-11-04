@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFormato } from '../../contexto';
 import { parseNumero } from '../../core/entrada';
-import type { OpcionesRegresion, ResultadoRegresion } from '../../core/regresion';
+import type { DatosRegresion, OpcionesRegresion, ResultadoRegresion } from '../../core/regresion';
+import { libroRegresion } from '../../core/exportar/regresion';
+import { escribirXlsx } from '../../core/exportar/xlsx';
 import { type Literal, type Seccion, infoLiteral, organizarSolucion, respuestaLiteral } from '../../core/regresion/literales';
 import type { Solucion } from '../../core/steps';
 import { GraficoDispersion } from '../../components/GraficoDispersion';
@@ -11,6 +13,7 @@ import { type Ejercicio, filasConDatos } from './estado';
 interface Props {
   ejercicio: Ejercicio;
   solucion: Solucion<ResultadoRegresion>;
+  datos: DatosRegresion;
   op: OpcionesRegresion;
   literales: Literal[];
   onEditar: () => void;
@@ -23,11 +26,24 @@ function ir(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-export function SolucionRegresion({ ejercicio, solucion, op, literales, onEditar }: Props) {
+/** Ofrece al navegador un archivo para guardar. */
+function descargar(bytes: Uint8Array, nombre: string) {
+  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombre;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function SolucionRegresion({ ejercicio, solucion, datos, op, literales, onEditar }: Props) {
   const { formato } = useFormato();
   const r = solucion.resultado;
   const { tabla, ejemplo } = ejercicio;
   const nombreY = tabla.nombreY.trim() || 'y';
+  const nombresX = tabla.nombresX.map((s) => s.trim());
   const secciones = useMemo(() => organizarSolucion(solucion.pasos, literales, r.k), [solucion, literales, r.k]);
   const [activa, setActiva] = useState<string>(idSeccion(secciones[0]));
   const documento = useRef<HTMLDivElement>(null);
@@ -60,6 +76,17 @@ export function SolucionRegresion({ ejercicio, solucion, op, literales, onEditar
   }, []);
 
   const literalesResueltos = secciones.filter((s) => s.letra !== null);
+
+  const descargarExcel = () => {
+    const origen = ejemplo ? ejemplo.etiqueta : (ejercicio.archivo ?? 'Datos propios');
+    const { hojas, activa } = libroRegresion({ datos, resultado: r, op, literales, titulo: origen, enunciado: ejemplo?.enunciado });
+    const base = (ejemplo ? ejemplo.etiqueta.split(' · ')[0] : (ejercicio.archivo?.replace(/\.[^.]+$/, '') ?? 'regresion'))
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^\w-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    descargar(escribirXlsx(hojas, activa), `${base || 'regresion'}-resuelto.xlsx`);
+  };
 
   return (
     <div className="solucion">
@@ -107,7 +134,10 @@ export function SolucionRegresion({ ejercicio, solucion, op, literales, onEditar
             <button type="button" className="boton" onClick={onEditar}>
               ← Cambiar lo que se pide
             </button>
-            <button type="button" className="boton primario" onClick={() => window.print()}>
+            <button type="button" className="boton primario" onClick={descargarExcel}>
+              Descargar Excel
+            </button>
+            <button type="button" className="boton" onClick={() => window.print()}>
               Imprimir o guardar en PDF
             </button>
           </div>
@@ -161,7 +191,7 @@ export function SolucionRegresion({ ejercicio, solucion, op, literales, onEditar
               {s.parte !== 'planteamiento' && (
                 <section className="respuesta-literal" aria-label={`Respuesta del literal ${s.letra}`}>
                   <span className="respuesta-etiqueta">Respuesta {s.letra}</span>
-                  {respuestaLiteral(s.parte, r, op, nombreY).map((b, i) => (
+                  {respuestaLiteral(s.parte, r, op, nombreY, nombresX).map((b, i) => (
                     <BloqueVista key={i} b={b} />
                   ))}
                 </section>
@@ -180,7 +210,7 @@ export function SolucionRegresion({ ejercicio, solucion, op, literales, onEditar
               <h3>
                 <span className="literal-letra">{s.letra}</span> {s.titulo}
               </h3>
-              {respuestaLiteral(s.parte as Literal, r, op, nombreY).map((b, i) => (
+              {respuestaLiteral(s.parte as Literal, r, op, nombreY, nombresX).map((b, i) => (
                 <BloqueVista key={i} b={b} />
               ))}
             </div>

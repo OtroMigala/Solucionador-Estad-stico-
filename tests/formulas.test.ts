@@ -12,6 +12,8 @@ import { type Herramienta, resolverHerramienta } from '../src/core/probabilidad/
 import type { Bloque, Paso } from '../src/core/steps';
 import { REGISTRO } from '../src/core/steps';
 import { segmentar } from '../src/core/textoRico';
+import { OPCIONES_KATEX } from '../src/core/latex';
+import { datosSinteticos } from './sinteticos';
 import type { Formato } from '../src/core/formato';
 
 function formulas(bloques: Bloque[]): string[] {
@@ -30,7 +32,7 @@ function revisar(pasos: Paso[]) {
   for (const p of pasos) {
     expect(REGISTRO[p.metodo], `método fuera del registro: ${p.metodo}`).toBeDefined();
     for (const latex of formulas(p.bloques)) {
-      expect(() => katex.renderToString(latex, { throwOnError: true, strict: 'error', displayMode: true }), latex).not.toThrow();
+      expect(() => katex.renderToString(latex, { ...OPCIONES_KATEX, throwOnError: true, strict: 'error', displayMode: true }), latex).not.toThrow();
       total++;
     }
   }
@@ -57,6 +59,18 @@ describe('todas las fórmulas se renderizan con KaTeX estricto', () => {
         }
       }
       expect(n).toBeGreaterThan(100);
+    });
+
+    it(`regresión con 16 variables (${f.decimales} decimales, ${f.coma ? 'coma' : 'punto'})`, () => {
+      const { y, x } = datosSinteticos(40, 16);
+      const op = { alfa: 0.05, x0: x.map((c) => c[0]), formato: f };
+      const r = resolverRegresion({ y, x }, op);
+      if (!r.ok) throw new Error(r.error);
+      let n = revisar(r.solucion.pasos);
+      for (const l of literalesDisponibles(16)) {
+        n += revisar([{ titulo: l.titulo, metodo: 'r2', bloques: respuestaLiteral(l.id, r.solucion.resultado, op) }]);
+      }
+      expect(n).toBeGreaterThan(50);
     });
 
     it(`probabilidad (${f.decimales} decimales, ${f.coma ? 'coma' : 'punto'})`, () => {

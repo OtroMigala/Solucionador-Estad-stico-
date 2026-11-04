@@ -1,6 +1,13 @@
 /** Constructores de fórmulas LaTeX usados por el núcleo. */
 import { type Formato, fmtTex } from './formato';
 
+/**
+ * Opciones de KaTeX comunes a la página y a las pruebas. El límite de
+ * expansiones por defecto (1000) no alcanza para sistemas grandes, como las
+ * 17 ecuaciones normales de una regresión con 16 variables.
+ */
+export const OPCIONES_KATEX = { maxExpand: 100_000 } as const;
+
 export const frac = (a: string | number, b: string | number) => `\\frac{${a}}{${b}}`;
 
 const ESCAPES: Record<string, string> = {

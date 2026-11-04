@@ -6,8 +6,10 @@
 import { type Formato, fmt, fmtPct, fmtPctTex, fmtTex, subindice } from '../formato';
 import { b, type Bloque, type Paso } from '../steps';
 import {
+  K_COMPACTO,
   type OpcionesRegresion,
   type ResultadoRegresion,
+  tablaCoeficientes,
   decisionF,
   ecuacionTex,
   ecuacionTexto,
@@ -142,7 +144,7 @@ export const formatoCoeficientes = (f: Formato, k: number): Formato => (k > 1 ? 
 const nombreX = (j: number, k: number) => (k === 1 ? 'x' : `x${subindice(j + 1)}`);
 
 /** Respuesta final de un literal, lista para copiar en el taller. */
-export function respuestaLiteral(lit: Literal, r: ResultadoRegresion, op: OpcionesRegresion, nombreY = 'y'): Bloque[] {
+export function respuestaLiteral(lit: Literal, r: ResultadoRegresion, op: OpcionesRegresion, nombreY = 'y', nombresX?: string[]): Bloque[] {
   const f = op.formato;
   const fc = formatoCoeficientes(f, r.k);
   const simple = r.k === 1;
@@ -158,6 +160,7 @@ export function respuestaLiteral(lit: Literal, r: ResultadoRegresion, op: Opcion
       ];
     }
     case 'parametros':
+      if (r.k > K_COMPACTO) return [tablaCoeficientes(r.beta, fc, nombresX), b.resultado(ecuacionTex(r.beta, fc, simple), ecuacionTexto(r.beta, fc, simple))];
       return [
         b.formula(
           r.beta.map((v, j) => `\\hat\\beta_{${j}} = ${fmtTex(v, fc)}`).join(',\\quad '),

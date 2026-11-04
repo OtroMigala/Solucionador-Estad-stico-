@@ -16,8 +16,10 @@ const uno = (re, nombre) => {
 
 const titulo = uno(/<title>[\s\S]*?<\/title>/, 'el título');
 const fuentes = html.match(/<link[^>]+fonts\.(googleapis|gstatic)\.com[^>]*>/g) ?? [];
-const estilos = html.match(/<style[^>]*>[\s\S]*?<\/style>/g) ?? [];
-const scripts = html.match(/<script[^>]*>[\s\S]*?<\/script>/g) ?? [];
+// (?=[\s>]) evita confundir <style> con etiquetas como <styleSheet> que aparecen dentro del JavaScript
+// (el XML de estilos del exportador a Excel).
+const estilos = html.match(/<style(?=[\s>])[^>]*>[\s\S]*?<\/style>/g) ?? [];
+const scripts = html.match(/<script(?=[\s>])[^>]*>[\s\S]*?<\/script>/g) ?? [];
 if (!estilos.length || !scripts.length) throw new Error('Faltan estilos o scripts en línea');
 
 const fragmento = [

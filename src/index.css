@@ -847,6 +847,18 @@ input[aria-invalid='true'] {
   background: linear-gradient(transparent 22%, var(--resaltador) 22%, var(--resaltador) 90%, transparent 90%);
 }
 
+/* Resultado de varias líneas (ecuación con muchas variables): resaltado parejo. */
+.resultado .marca:has(.mtable) {
+  padding: 6px 12px;
+  border-radius: 3px;
+  background: var(--resaltador);
+}
+
+/* La sombra de desplazamiento de la fórmula no debe pintarse sobre el resaltado. */
+.resultado .marca .formula {
+  background: none;
+}
+
 .resultado .katex-display {
   margin: 0;
 }
