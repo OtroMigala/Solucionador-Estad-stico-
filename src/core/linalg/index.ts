@@ -51,21 +51,25 @@ export type ResultadoInversa =
  * elementos de la columna. X'X es simétrica y definida positiva cuando las
  * columnas de X son independientes, así que en la práctica no hace falta
  * pivoteo y el procedimiento coincide con el que se hace a mano.
+ *
+ * Un pivote se considera cero en relación con la escala de su propia columna,
+ * no con el mayor número de la matriz: si una variable se mide en centésimas y
+ * otra en miles, el pivote de la pequeña es legítimamente pequeño.
  */
 export function inversaGaussJordan(A: Matriz): ResultadoInversa {
   const n = A.length;
   const izq = A.map((f) => [...f]);
   const der = identidad(n);
-  const escala = Math.max(...A.flat().map(Math.abs), 1e-300);
-  const tol = 1e-12 * escala;
+  const tol = A[0].map((_, j) => 1e-12 * Math.max(...A.map((f) => Math.abs(f[j])), 1e-300));
   const etapas: EtapaGaussJordan[] = [];
 
   for (let j = 0; j < n; j++) {
     const operaciones: OperacionFila[] = [];
-    if (Math.abs(izq[j][j]) <= tol) {
+    const tolJ = tol[j];
+    if (Math.abs(izq[j][j]) <= tolJ) {
       let r = -1;
       for (let i = j + 1; i < n; i++) {
-        if (Math.abs(izq[i][j]) > tol && (r < 0 || Math.abs(izq[i][j]) > Math.abs(izq[r][j]))) r = i;
+        if (Math.abs(izq[i][j]) > tolJ && (r < 0 || Math.abs(izq[i][j]) > Math.abs(izq[r][j]))) r = i;
       }
       if (r < 0) return { singular: true, columna: j };
       [izq[j], izq[r]] = [izq[r], izq[j]];

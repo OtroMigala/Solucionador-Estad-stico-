@@ -136,3 +136,24 @@ describe('muchas variables', () => {
     cerca(s.SCR + s.SCE, s.SCT, 1e-9);
   });
 });
+
+describe('escalas muy distintas', () => {
+  // x1 en centésimas, x2 en miles y x3 en unidades, como una pureza junto a una producción en toneladas.
+  const x1 = [0.031, 0.027, 0.044, 0.038, 0.029, 0.041, 0.035, 0.033, 0.046, 0.025, 0.039, 0.03];
+  const x2 = [9800, 10400, 11250, 9600, 12100, 10900, 9950, 11800, 10300, 12500, 9700, 11100];
+  const x3 = [5.2, 4.8, 6.1, 5.5, 4.9, 6.3, 5.1, 5.8, 6.0, 4.7, 5.6, 5.3];
+  const y = x1.map((v, i) => 12 + 300 * v + 0.004 * x2[i] - 2.5 * x3[i] + ((i * 7) % 5) / 10);
+  const op = { alfa: 0.05, x0: null, formato: FORMATO_BASE };
+
+  it('resuelve aunque una variable esté en centésimas y otra en miles', () => {
+    const r = resolverRegresion({ y, x: [x1, x2, x3] }, op);
+    if (!r.ok) throw new Error(r.error);
+    const s = r.solucion.resultado;
+    s.XtX.forEach((fila, i) => cerca(fila.reduce((acc, v, j) => acc + v * s.beta[j], 0), s.Xty[i], 1e-9));
+  });
+
+  it('sigue rechazando una columna proporcional a otra o constante, en cualquier escala', () => {
+    expect(resolverRegresion({ y, x: [x1, x1.map((v) => v * 100000), x3] }, op).ok).toBe(false);
+    expect(resolverRegresion({ y, x: [x1, x2, x1.map(() => 0.02)] }, op).ok).toBe(false);
+  });
+});
