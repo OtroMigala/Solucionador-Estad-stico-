@@ -99,9 +99,24 @@ npm install
 npm run dev              # servidor de desarrollo
 npm test                 # pruebas
 npm run build            # compilación para Vercel / GitHub Pages (carpeta dist/)
+npm run build:usb        # programa en un solo archivo HTML para llevar en una USB (usb/)
 npm run build:artifact   # página en un solo archivo HTML (dist-artifact/)
 npm run fixtures         # regenera los valores de referencia (requiere Python con scipy y statsmodels)
 ```
+
+## Sin conexión (USB)
+
+`npm run build:usb` deja en `usb/` el programa en un solo archivo HTML
+(`Calculadora de regresion lineal.html`, unos 1,6 MB, con el código, los
+estilos y todas las fuentes adentro) y un `LEEME.txt` con la versión y la
+huella SHA-256 del archivo. Se abre con doble clic, sin servidor ni internet.
+
+La versión web y la de la USB salen del mismo código y usan los mismos
+archivos de fuentes (empaquetados con `@fontsource`, sin Google Fonts). En
+Chrome, el texto de las soluciones de todos los ejercicios y las capturas de
+pantalla coinciden píxel a píxel entre las dos. El pie de página muestra la
+versión (commit y fecha) para comprobar que son la misma; el empaquetado se
+detiene si el archivo dependiera de algún recurso de internet.
 
 ## Validación
 

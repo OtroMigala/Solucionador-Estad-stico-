@@ -103,6 +103,7 @@ function Contenido() {
         </span>
         <span>Resultados validados contra scipy y statsmodels con error menor a 10⁻⁶.</span>
         <span>Las probabilidades se calculan con fracciones exactas.</span>
+        <span>Versión {__VERSION__}</span>
       </footer>
     </div>
   );
