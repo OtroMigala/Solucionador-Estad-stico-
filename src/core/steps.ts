@@ -65,6 +65,7 @@ export type Respuesta<T> = { ok: true; solucion: Solucion<T> } | { ok: false; er
 const P_SIMPLE = 'Covarianza y regresión lineal';
 const P_MULTIPLE = 'Regresión lineal múltiple';
 const P_PROB = 'Principios de probabilidad';
+const P_DIST = 'Distribuciones discretas de probabilidad';
 
 /** Registro de métodos (sección «Registro de métodos» de la propuesta). */
 export const REGISTRO: Record<string, Metodo> = Object.fromEntries(
@@ -94,6 +95,15 @@ export const REGISTRO: Record<string, Metodo> = Object.fromEntries(
       ['regla-producto', 'Regla del producto', 'probabilidad', P_PROB, '34'],
       ['probabilidad-total', 'Probabilidad total', 'probabilidad', P_PROB, '35–36'],
       ['bayes', 'Teorema de Bayes', 'probabilidad', P_PROB, '37'],
+      ['bernoulli', 'Proceso de Bernoulli', 'probabilidad', P_DIST, '5–6'],
+      ['binomial', 'Distribución binomial', 'probabilidad', P_DIST, '7–8'],
+      ['momentos-binomial', 'Media y varianza de la binomial', 'probabilidad', P_DIST, '8'],
+      ['tchebycheff', 'Teorema de Tchebycheff (intervalo μ ± 2σ)', 'probabilidad', P_DIST, '10, 14'],
+      ['multinomial', 'Distribución multinomial', 'probabilidad', P_DIST, '11–12'],
+      ['hipergeometrica', 'Distribución hipergeométrica', 'probabilidad', P_DIST, '13'],
+      ['momentos-hipergeometrica', 'Media y varianza de la hipergeométrica', 'probabilidad', P_DIST, '13'],
+      ['poisson', 'Distribución de Poisson', 'probabilidad', P_DIST, '18–19'],
+      ['aproximacion-poisson', 'Aproximación de la binomial por Poisson', 'probabilidad', P_DIST, '21'],
     ] as const
   ).map(([id, nombre, tema, presentacion, diapositiva]) => [
     id,

@@ -19,6 +19,17 @@ import { type TipoRelacion, type Relacion, resolverDosEventos, resolverTresEvent
 import { resolverSucesivas } from './sucesivas';
 import { type Consulta, resolverContingencia } from './contingencia';
 import { resolverBayes } from './bayes';
+import type { SalidaDistribucion } from './distribuciones';
+import {
+  type BinomialForm,
+  type HipergeometricaForm,
+  type MultinomialForm,
+  type PoissonForm,
+  resolverBinomialForm,
+  resolverHipergeometricaForm,
+  resolverMultinomialForm,
+  resolverPoissonForm,
+} from './formulariosDistribuciones';
 
 /* ─────────── Conteo ─────────── */
 
@@ -206,7 +217,18 @@ export interface BayesForm {
 
 /* ─────────── Despacho ─────────── */
 
-export type Herramienta = 'conteo' | 'clasica' | 'espacio' | 'reglas' | 'sucesivas' | 'contingencia' | 'bayes';
+export type Herramienta =
+  | 'conteo'
+  | 'clasica'
+  | 'espacio'
+  | 'reglas'
+  | 'sucesivas'
+  | 'contingencia'
+  | 'bayes'
+  | 'binomial'
+  | 'hipergeometrica'
+  | 'poisson'
+  | 'multinomial';
 
 export interface FormPorHerramienta {
   conteo: ConteoForm;
@@ -216,16 +238,39 @@ export interface FormPorHerramienta {
   sucesivas: SucesivasForm;
   contingencia: ContingenciaForm;
   bayes: BayesForm;
+  binomial: BinomialForm;
+  hipergeometrica: HipergeometricaForm;
+  poisson: PoissonForm;
+  multinomial: MultinomialForm;
 }
 
 /** Resultado común para la interfaz: pasos + valores principales para el resumen y las pruebas. */
 export interface Salida {
-  /** Valores principales con su etiqueta, en orden (exactos). */
-  valores: { etiqueta: string; valor: Racional | null }[];
+  /** Valores principales con su etiqueta, en orden: exactos o, si no hay fracción (Poisson), solo el decimal. */
+  valores: { etiqueta: string; valor: Racional | null; aprox?: number }[];
+}
+
+function desdeDistribucion(r: Respuesta<SalidaDistribucion>): Respuesta<Salida> {
+  if (!r.ok) return r;
+  return {
+    ok: true,
+    solucion: {
+      pasos: r.solucion.pasos,
+      resultado: { valores: r.solucion.resultado.valores.map((v) => ({ etiqueta: v.etiqueta, valor: v.prob.exacto, aprox: v.prob.valor })) },
+    },
+  };
 }
 
 export function resolverHerramienta<H extends Herramienta>(h: H, form: FormPorHerramienta[H], f: Formato): Respuesta<Salida> {
   switch (h) {
+    case 'binomial':
+      return desdeDistribucion(resolverBinomialForm(form as BinomialForm, f));
+    case 'hipergeometrica':
+      return desdeDistribucion(resolverHipergeometricaForm(form as HipergeometricaForm, f));
+    case 'poisson':
+      return desdeDistribucion(resolverPoissonForm(form as PoissonForm, f));
+    case 'multinomial':
+      return desdeDistribucion(resolverMultinomialForm(form as MultinomialForm, f));
     case 'conteo': {
       const e = leerConteo(form as ConteoForm);
       if (!e.ok) return e;

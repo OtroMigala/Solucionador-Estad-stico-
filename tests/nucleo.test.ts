@@ -107,8 +107,20 @@ describe('lectura de datos', () => {
 });
 
 describe('estructura base', () => {
-  it('el registro contiene los 24 métodos de la propuesta', () => {
-    expect(Object.keys(REGISTRO)).toHaveLength(24);
+  it('el registro contiene los 24 métodos de la propuesta y los 9 de distribuciones discretas', () => {
+    expect(Object.keys(REGISTRO)).toHaveLength(33);
+    const distribuciones = Object.values(REGISTRO).filter((m) => m.presentacion === 'Distribuciones discretas de probabilidad');
+    expect(distribuciones.map((m) => m.id)).toEqual([
+      'bernoulli',
+      'binomial',
+      'momentos-binomial',
+      'tchebycheff',
+      'multinomial',
+      'hipergeometrica',
+      'momentos-hipergeometrica',
+      'poisson',
+      'aproximacion-poisson',
+    ]);
   });
   it('rechaza pasos con métodos fuera del registro', () => {
     expect(() => paso({ titulo: 'x', metodo: 'no-existe', bloques: [] })).toThrow();

@@ -20,6 +20,8 @@ import {
   terminoVacio,
 } from './formularios';
 import type { TipoRelacion } from './reglas';
+import { EJEMPLOS_DISTRIBUCIONES } from './ejemplosDistribuciones';
+import { consultaVacia } from './formulariosDistribuciones';
 
 export interface Ejemplo<H extends Herramienta = Herramienta> {
   id: string;
@@ -724,7 +726,7 @@ const CLASE: EjemploProbabilidad[] = [
 export const EJEMPLOS_PROBABILIDAD: EjemploProbabilidad[] = [...TALLER_CONTEO, ...TALLER_PROB, ...CLASE];
 
 export function ejemplosDe<H extends Herramienta>(h: H): Ejemplo<H>[] {
-  return EJEMPLOS_PROBABILIDAD.filter((e) => e.herramienta === h) as unknown as Ejemplo<H>[];
+  return [...EJEMPLOS_PROBABILIDAD, ...EJEMPLOS_DISTRIBUCIONES].filter((e) => e.herramienta === h) as unknown as Ejemplo<H>[];
 }
 
 /** Formularios iniciales de cada herramienta: el primer ejemplo del taller que la usa. */
@@ -733,6 +735,8 @@ export function formInicial<H extends Herramienta>(h: H): FormPorHerramienta[H] 
   if (e) return structuredClone(e.form);
   return structuredClone(FORM_VACIO[h]);
 }
+
+const DIST_VACIA = { exito: '', consultas: [consultaVacia('igual', '1')], momentos: false, tchebycheff: false, tabla: false };
 
 const FORM_VACIO: FormPorHerramienta = {
   conteo: uno(comb(10, 3)),
@@ -762,6 +766,15 @@ const FORM_VACIO: FormPorHerramienta = {
       { simbolo: 'B2', descripcion: '', prior: '0.5', verosimilitud: '0.2' },
     ],
     objetivo: 0,
+  },
+  binomial: { ...DIST_VACIA, n: '10', pi: '0,5' },
+  hipergeometrica: { ...DIST_VACIA, N: '20', n: '5', k: '4' },
+  poisson: { ...DIST_VACIA, modo: 'tasa', tasa: '2', unidades: '1', unidad: 'unidad', n: '', pi: '' },
+  multinomial: {
+    categorias: [
+      { nombre: 'E1', pi: '1/2', x: '1' },
+      { nombre: 'E2', pi: '1/2', x: '1' },
+    ],
   },
 };
 

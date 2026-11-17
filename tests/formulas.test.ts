@@ -13,6 +13,7 @@ import type { Bloque, Paso } from '../src/core/steps';
 import { REGISTRO } from '../src/core/steps';
 import { segmentar } from '../src/core/textoRico';
 import { OPCIONES_KATEX } from '../src/core/latex';
+import { EJEMPLOS_DISTRIBUCIONES } from '../src/core/probabilidad/ejemplosDistribuciones';
 import { datosSinteticos } from './sinteticos';
 import type { Formato } from '../src/core/formato';
 
@@ -75,7 +76,7 @@ describe('todas las fórmulas se renderizan con KaTeX estricto', () => {
 
     it(`probabilidad (${f.decimales} decimales, ${f.coma ? 'coma' : 'punto'})`, () => {
       let n = 0;
-      for (const e of EJEMPLOS_PROBABILIDAD) {
+      for (const e of [...EJEMPLOS_PROBABILIDAD, ...EJEMPLOS_DISTRIBUCIONES]) {
         const r = resolverHerramienta(e.herramienta, e.form as never, f);
         if (!r.ok) throw new Error(`${e.id}: ${r.error}`);
         n += revisar(r.solucion.pasos);
@@ -89,7 +90,19 @@ describe('todas las fórmulas se renderizan con KaTeX estricto', () => {
   }
 
   it('cada herramienta tiene un formulario inicial que se resuelve', () => {
-    const herramientas: Herramienta[] = ['conteo', 'clasica', 'espacio', 'reglas', 'sucesivas', 'contingencia', 'bayes'];
+    const herramientas: Herramienta[] = [
+      'conteo',
+      'clasica',
+      'espacio',
+      'reglas',
+      'sucesivas',
+      'contingencia',
+      'bayes',
+      'binomial',
+      'hipergeometrica',
+      'poisson',
+      'multinomial',
+    ];
     for (const h of herramientas) {
       const r = resolverHerramienta(h, formInicial(h) as never, FORMATOS[0]);
       expect(r.ok, h).toBe(true);

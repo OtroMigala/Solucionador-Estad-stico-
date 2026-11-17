@@ -7,6 +7,8 @@ import { MensajeError, SelectorEjemplo } from '../../components/Controles';
 import { FormulaEnLinea } from '../../components/Formula';
 import { Procedimiento } from '../../components/Pasos';
 import { enteroTex } from '../../core/combinatoria';
+import { FormBinomial, FormHipergeometrica, FormMultinomial, FormPoisson } from './FormulariosDistribuciones';
+import { probTexP } from '../../core/probabilidad/distribuciones';
 import { FormBayes, FormClasica, FormConteo, FormContingencia, FormEspacio, FormReglas, FormSucesivas } from './Formularios';
 
 export const HERRAMIENTAS: { id: Herramienta; nombre: string }[] = [
@@ -17,6 +19,10 @@ export const HERRAMIENTAS: { id: Herramienta; nombre: string }[] = [
   { id: 'sucesivas', nombre: 'Extracciones sucesivas' },
   { id: 'contingencia', nombre: 'Tabla de contingencia' },
   { id: 'bayes', nombre: 'Probabilidad total y Bayes' },
+  { id: 'binomial', nombre: 'Binomial' },
+  { id: 'hipergeometrica', nombre: 'Hipergeométrica' },
+  { id: 'poisson', nombre: 'Poisson' },
+  { id: 'multinomial', nombre: 'Multinomial' },
 ];
 
 /** Puntos del taller que resuelve cada herramienta, para mostrarlos en el selector. */
@@ -82,6 +88,14 @@ export function ProbabilidadModule({ herramienta, onHerramienta }: { herramienta
         return <FormContingencia form={estados.contingencia.form} onCambio={(f) => setForm('contingencia', f)} />;
       case 'bayes':
         return <FormBayes form={estados.bayes.form} onCambio={(f) => setForm('bayes', f)} />;
+      case 'binomial':
+        return <FormBinomial form={estados.binomial.form} onCambio={(f) => setForm('binomial', f)} />;
+      case 'hipergeometrica':
+        return <FormHipergeometrica form={estados.hipergeometrica.form} onCambio={(f) => setForm('hipergeometrica', f)} />;
+      case 'poisson':
+        return <FormPoisson form={estados.poisson.form} onCambio={(f) => setForm('poisson', f)} />;
+      case 'multinomial':
+        return <FormMultinomial form={estados.multinomial.form} onCambio={(f) => setForm('multinomial', f)} />;
     }
   })();
 
@@ -118,7 +132,9 @@ export function ProbabilidadModule({ herramienta, onHerramienta }: { herramienta
                   <div key={i} className="cifra">
                     <span className="cifra-etiqueta">{v.etiqueta}</span>
                     <span className="cifra-valor">
-                      {v.valor === null ? (
+                      {v.valor === null && v.aprox !== undefined ? (
+                        <FormulaEnLinea latex={probTexP({ exacto: null, valor: v.aprox }, formato)} />
+                      ) : v.valor === null ? (
                         'no definida'
                       ) : (
                         <FormulaEnLinea latex={herramienta === 'conteo' ? enteroTex(v.valor.num) : probTex(v.valor, formato)} />

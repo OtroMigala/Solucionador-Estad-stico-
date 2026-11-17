@@ -67,6 +67,19 @@ con fracciones exactas:
 | Tabla de contingencia | 31, 32 |
 | Probabilidad total y teorema de Bayes | 35, 36 |
 
+**Distribuciones discretas** (presentación «Distribuciones discretas de
+probabilidad»; 18 ejemplos y ejercicios de clase, validados contra scipy):
+
+| Herramienta | Qué calcula |
+|---|---|
+| Binomial b(x; n, π) | Probabilidad exacta, al menos, más de, a lo sumo, menos de, entre; tabla f(x); media nπ, varianza nπ(1−π); intervalo μ ± 2σ con Tchebycheff |
+| Hipergeométrica h(x; N, n, k) | Lo mismo, con μ = nk/N y σ² = (N−n)/(N−1)·(nk/N)(1−k/N) |
+| Poisson P(x; λ) | λ como promedio por unidad × unidades del intervalo, o λ = nπ (aproximación de la binomial) |
+| Multinomial | Probabilidad de x₁, …, xₖ ocurrencias con probabilidades π₁, …, πₖ |
+
+Binomial, hipergeométrica y multinomial se calculan con fracciones exactas;
+Poisson, con decimales.
+
 ## Estructura
 
 ```
