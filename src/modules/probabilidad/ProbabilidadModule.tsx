@@ -63,14 +63,25 @@ export function ProbabilidadModule({ herramienta, onHerramienta }: { herramienta
   const { formato } = useFormato();
   const [estados, setEstados] = useState<Estados>(inicial);
   const actual = estados[herramienta];
-  const diferido = useDeferredValue(actual.form);
+  // La herramienta y su formulario se aplazan juntos: si se aplazara solo el formulario, al cambiar de
+  // herramienta se resolvería un instante la nueva con el formulario de la anterior.
+  const planteamiento = useMemo(() => ({ h: herramienta, form: actual.form }), [herramienta, actual.form]);
+  const diferido = useDeferredValue(planteamiento);
 
   const setForm = <H extends Herramienta>(h: H, form: FormPorHerramienta[H]) =>
     setEstados((s) => ({ ...s, [h]: { ...s[h], form, modificado: s[h].ejemplo !== null } }));
   const elegir = <H extends Herramienta>(h: H, e: Ejemplo<H>) =>
     setEstados((s) => ({ ...s, [h]: { ejemplo: e, modificado: false, form: structuredClone(e.form) } }));
 
-  const r = useMemo(() => resolverHerramienta(herramienta, diferido as never, formato), [herramienta, diferido, formato]);
+  const r = useMemo(() => {
+    try {
+      return resolverHerramienta(diferido.h, diferido.form as never, formato);
+    } catch {
+      // Un error inesperado del cálculo no debe dejar la página en blanco.
+      return { ok: false as const, error: 'No se pudo resolver con estos datos. Revisa los valores del planteamiento.' };
+    }
+  }, [diferido, formato]);
+  const herramientaResuelta = diferido.h;
 
   const formulario = (() => {
     switch (herramienta) {
@@ -137,10 +148,10 @@ export function ProbabilidadModule({ herramienta, onHerramienta }: { herramienta
                       ) : v.valor === null ? (
                         'no definida'
                       ) : (
-                        <FormulaEnLinea latex={herramienta === 'conteo' ? enteroTex(v.valor.num) : probTex(v.valor, formato)} />
+                        <FormulaEnLinea latex={herramientaResuelta === 'conteo' ? enteroTex(v.valor.num) : probTex(v.valor, formato)} />
                       )}
                     </span>
-                    {herramienta === 'conteo' && <span className="cifra-detalle">formas posibles</span>}
+                    {herramientaResuelta === 'conteo' && <span className="cifra-detalle">formas posibles</span>}
                   </div>
                 ))}
               </div>
