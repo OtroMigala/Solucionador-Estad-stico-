@@ -224,10 +224,14 @@ function tablaAjustados(y: number[], a: Anova, f: Formato, xSimple?: number[]): 
     ...(xSimple ? [fmt(xSimple[i], f)] : []),
     fmt(yi, f),
     fmt(a.yGorro[i], f),
+    fmt(yi ** 2, f),
+    fmt(a.yGorro[i] ** 2, f),
+    fmt(yi * a.yGorro[i], f),
     fmt((yi - a.mediaY) ** 2, f),
     fmt((a.yGorro[i] - a.mediaY) ** 2, f),
     fmt((yi - a.yGorro[i]) ** 2, f),
   ]);
+  const s = sumasExpandidas(y, a);
   return {
     tipo: 'tabla',
     columnas: [
@@ -235,6 +239,9 @@ function tablaAjustados(y: number[], a: Anova, f: Formato, xSimple?: number[]): 
       ...(xSimple ? [{ titulo: 'x' }] : []),
       { titulo: 'yᵢ' },
       { titulo: 'ŷᵢ' },
+      { titulo: 'yᵢ²' },
+      { titulo: 'ŷᵢ²' },
+      { titulo: 'yᵢ·ŷᵢ' },
       { titulo: '(yᵢ − ȳ)²' },
       { titulo: '(ŷᵢ − ȳ)²' },
       { titulo: '(yᵢ − ŷᵢ)²' },
@@ -243,23 +250,63 @@ function tablaAjustados(y: number[], a: Anova, f: Formato, xSimple?: number[]): 
     pie: [
       'Σ',
       ...(xSimple ? [fmt(sumar(xSimple), f)] : []),
-      fmt(sumar(y), f),
-      fmt(sumar(a.yGorro), f),
+      fmt(s.y, f),
+      fmt(s.g, f),
+      fmt(s.y2, f),
+      fmt(s.g2, f),
+      fmt(s.yg, f),
       fmt(a.SCT, f),
       fmt(a.SCR, f),
       fmt(a.SCE, f),
     ],
-    nota: `ȳ = ${fmt(a.mediaY, f)}. Las tres últimas sumas son SCT, SCR y SCE.`,
+    nota: `ȳ = ${fmt(a.mediaY, f)}. Las columnas yᵢ, ŷᵢ, yᵢ², ŷᵢ² e yᵢ·ŷᵢ se usan en la forma expandida; las tres últimas sumas son SCT, SCR y SCE calculadas directamente.`,
   };
 }
 
-function bloquesAnova(a: Anova, f: Formato, n: number, k: number): Bloque[] {
+/** Sumas que usa la forma expandida de SCT, SCR y SCE. */
+function sumasExpandidas(y: number[], a: Anova) {
+  return {
+    y: sumar(y),
+    g: sumar(a.yGorro),
+    y2: sumar(y.map((v) => v * v)),
+    g2: sumar(a.yGorro.map((v) => v * v)),
+    yg: sumar(y.map((v, i) => v * a.yGorro[i])),
+  };
+}
+
+/**
+ * SCT, SCR y SCE en su forma expandida, con las sumas de la tabla de valores
+ * ajustados sustituidas. El resultado mostrado es la suma calculada
+ * directamente, que no pierde precisión al restar números grandes.
+ */
+function bloquesExpansion(y: number[], a: Anova, f: Formato, n: number): Bloque[] {
+  const s = sumasExpandidas(y, a);
+  const my = par(a.mediaY, f);
+  return [
+    b.texto(
+      'Cada cuadrado se desarrolla como un binomio, \\((y_i-\\bar{y})^2 = y_i^2 - 2\\bar{y}\\,y_i + \\bar{y}^2\\), y se suma fila por fila. Como \\(\\bar{y}\\) es una constante, sale de la sumatoria, y \\(\\bar{y}^2\\) sumado n veces da \\(n\\bar{y}^2\\):',
+    ),
+    b.formula(
+      `\\sum(y_i-\\bar{y})^2 = \\sum y_i^2 - 2\\bar{y}\\sum y_i + \\sum_{i=1}^{n}\\bar{y}^2 = \\sum y_i^2 - 2\\bar{y}\\sum y_i + n\\bar{y}^2`,
+      'Σ(yᵢ − ȳ)² = Σyᵢ² − 2ȳΣyᵢ + Σȳ² = Σyᵢ² − 2ȳΣyᵢ + nȳ²',
+    ),
+    b.texto('Con las sumas de la tabla anterior (columnas yᵢ, ŷᵢ, yᵢ², ŷᵢ² e yᵢ·ŷᵢ):'),
+    b.formula(
+      `\\begin{aligned} SCT &= \\sum(y_i-\\bar{y})^2 = \\sum y_i^2 - 2\\bar{y}\\sum y_i + n\\bar{y}^2 \\\\ &= ${fmtTex(s.y2, f)} - 2${my}${par(s.y, f)} + ${n}${my}^2 = ${fmtTex(a.SCT, f)} \\\\[4pt] SCR &= \\sum(\\hat{y}_i-\\bar{y})^2 = \\sum \\hat{y}_i^2 - 2\\bar{y}\\sum \\hat{y}_i + n\\bar{y}^2 \\\\ &= ${fmtTex(s.g2, f)} - 2${my}${par(s.g, f)} + ${n}${my}^2 = ${fmtTex(a.SCR, f)} \\\\[4pt] SCE &= \\sum(y_i-\\hat{y}_i)^2 = \\sum y_i^2 - 2\\sum y_i\\hat{y}_i + \\sum \\hat{y}_i^2 \\\\ &= ${fmtTex(s.y2, f)} - 2${par(s.yg, f)} + ${fmtTex(s.g2, f)} = ${fmtTex(a.SCE, f)} \\end{aligned}`,
+      `SCT = Σyᵢ² − 2ȳΣyᵢ + nȳ² = ${fmt(s.y2, f)} − 2(${fmt(a.mediaY, f)})(${fmt(s.y, f)}) + ${n}(${fmt(a.mediaY, f)})² = ${fmt(a.SCT, f)}; ` +
+        `SCR = Σŷᵢ² − 2ȳΣŷᵢ + nȳ² = ${fmt(s.g2, f)} − 2(${fmt(a.mediaY, f)})(${fmt(s.g, f)}) + ${n}(${fmt(a.mediaY, f)})² = ${fmt(a.SCR, f)}; ` +
+        `SCE = Σyᵢ² − 2Σyᵢŷᵢ + Σŷᵢ² = ${fmt(s.y2, f)} − 2(${fmt(s.yg, f)}) + ${fmt(s.g2, f)} = ${fmt(a.SCE, f)}`,
+    ),
+    b.texto(
+      `Como \\(\\sum y_i = n\\bar{y}\\), los dos últimos términos de SCT se reducen a \\(-n\\bar{y}^2\\): \\(SCT = \\sum y_i^2 - n\\bar{y}^2\\). Los valores coinciden con las sumas directas de las columnas \\((y_i-\\bar{y})^2\\), \\((\\hat{y}_i-\\bar{y})^2\\) y \\((y_i-\\hat{y}_i)^2\\) (si se reemplazan valores redondeados puede haber diferencias en los últimos decimales).`,
+    ),
+  ];
+}
+
+function bloquesAnova(y: number[], a: Anova, f: Formato, n: number, k: number): Bloque[] {
   const glE = k === 1 ? 'n-2' : 'n-(k+1)';
   return [
-    b.formula(
-      `\\begin{aligned} SCR &= \\sum(\\hat{y}_i-\\bar{y})^2 = ${fmtTex(a.SCR, f)} \\\\ SCE &= \\sum(y_i-\\hat{y}_i)^2 = ${fmtTex(a.SCE, f)} \\\\ SCT &= \\sum(y_i-\\bar{y})^2 = ${fmtTex(a.SCT, f)} \\end{aligned}`,
-      `SCR = Σ(ŷᵢ − ȳ)² = ${fmt(a.SCR, f)}; SCE = Σ(yᵢ − ŷᵢ)² = ${fmt(a.SCE, f)}; SCT = Σ(yᵢ − ȳ)² = ${fmt(a.SCT, f)}`,
-    ),
+    ...bloquesExpansion(y, a, f, n),
     b.texto(
       `Comprobación: \\(SCR + SCE = ${fmtTex(a.SCR, f)} + ${fmtTex(a.SCE, f)} = ${fmtTex(a.SCR + a.SCE, f)} = SCT\\).`,
     ),
@@ -624,7 +671,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
       parte: 'anova',
       porque:
         'La variación total de y (SCT) se divide en la parte que explica la recta (SCR) y la que queda sin explicar alrededor de ella (SCE): SCT = SCR + SCE. Al dividir cada suma entre sus grados de libertad se obtienen cuadrados medios comparables.',
-      bloques: bloquesAnova(a, f, n, 1),
+      bloques: bloquesAnova(y, a, f, n, 1),
     }),
   );
 
@@ -950,7 +997,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
       parte: 'anova',
       porque:
         'La variación total de y (SCT) se reparte entre lo que explica el modelo (SCR) y lo que queda sin explicar (SCE). Los grados de libertad son k para la regresión, n − (k + 1) para el error y n − 1 en total.',
-      bloques: bloquesAnova(a, f, n, k),
+      bloques: bloquesAnova(y, a, f, n, k),
     }),
   );
 

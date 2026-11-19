@@ -157,3 +157,22 @@ describe('escalas muy distintas', () => {
     expect(resolverRegresion({ y, x: [x1, x2, x1.map(() => 0.02)] }, op).ok).toBe(false);
   });
 });
+
+describe('forma expandida de las sumas de cuadrados', () => {
+  for (const e of EJEMPLOS_REGRESION) {
+    it(e.etiqueta, () => {
+      const s = resolver(e.id).resultado;
+      const n = s.n;
+      const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
+      const ym = s.mediaY;
+      const y2 = sum(e.y.map((v) => v * v));
+      const g2 = sum(s.yGorro.map((v) => v * v));
+      const yg = sum(e.y.map((v, i) => v * s.yGorro[i]));
+      cerca(y2 - 2 * ym * sum(e.y) + n * ym * ym, s.SCT);
+      cerca(g2 - 2 * ym * sum(s.yGorro) + n * ym * ym, s.SCR);
+      cerca(y2 - 2 * yg + g2, s.SCE);
+      const pasoAnova = resolver(e.id).pasos.find((p) => p.titulo === 'Tabla ANOVA')!;
+      expect(pasoAnova.bloques.some((b) => b.tipo === 'formula' && b.latex.includes('n\\bar{y}^2'))).toBe(true);
+    });
+  }
+});
