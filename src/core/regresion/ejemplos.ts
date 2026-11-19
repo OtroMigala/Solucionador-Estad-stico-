@@ -103,7 +103,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     etiqueta: 'Diapositivas · Camiones diésel',
     fuente: 'clase',
     enunciado:
-      'Se probó un grupo de camiones ligeros con motor diésel para saber si la humedad (x₁), la temperatura del aire (x₂) y la presión barométrica (x₃) influyen en la cantidad de óxido nitroso que emiten (y, en ppm). Estime el modelo con las ecuaciones normales y con matrices.',
+      'Se probó un grupo de camiones ligeros con motor diésel para saber si la humedad (x₁), la temperatura del aire (x₂) y la presión barométrica (x₃) influyen en la cantidad de óxido nitroso que emiten (y, en ppm). El modelo es y = β₀ + β₁x₁ + β₂x₂ + β₃x₃. Estime los parámetros del modelo.',
     nombreY: 'Óxido nitroso (ppm)',
     nombresX: ['Humedad', 'Temperatura del aire', 'Presión barométrica'],
     y: [0.9, 0.91, 0.96, 0.89, 1.0, 1.1, 1.15, 1.03, 0.77, 1.07, 1.07, 0.94, 1.1, 1.1, 1.1, 0.91, 0.87, 0.78, 0.82, 0.95],
@@ -114,7 +114,7 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     ],
     alfa: 0.05,
     x0: null,
-    literales: ['parametros', 'r2'],
+    literales: ['parametros'],
     nota: 'Resultado de Excel del profesor: β̂₀ = −3,507778; β̂₁ = −0,002625; β̂₂ = 0,000799; β̂₃ = 0,154155; R² = 0,800463.',
   },
   {
@@ -140,21 +140,21 @@ export const EJEMPLOS_REGRESION: EjemploRegresion[] = [
     etiqueta: 'Diapositivas · Sólidos y demanda química de oxígeno',
     fuente: 'clase',
     enunciado:
-      'Se registraron x, la reducción porcentual de los sólidos totales, y y, el porcentaje de disminución de la demanda química de oxígeno. Ajuste la recta de regresión, construya la tabla ANOVA y determine si la variable regresora aporta al modelo.',
+      'Se registraron x, la reducción porcentual de los sólidos totales, y y, el porcentaje de disminución de la demanda química de oxígeno. Ajuste la recta de regresión, realice la tabla ANOVA y determine si la variable regresora aporta al modelo (diap. 25). Halle el coeficiente de determinación (diap. 26).',
     nombreY: 'Reducción de la demanda de oxígeno (%)',
     nombresX: ['Reducción de sólidos (%)'],
     y: [5, 11, 21, 16, 16, 28, 27, 25, 35, 30, 40, 32, 34, 32, 34, 37, 38, 34, 36, 38, 37, 36, 45, 39, 41, 40, 44, 37, 44, 46, 46, 49, 51],
     x: [[3, 7, 11, 15, 18, 27, 29, 30, 30, 31, 31, 32, 33, 33, 34, 36, 36, 36, 37, 38, 39, 39, 39, 40, 41, 42, 42, 43, 44, 45, 46, 47, 50]],
     alfa: 0.05,
     x0: null,
-    literales: ['parametros', 'anova', 'prueba'],
+    literales: ['parametros', 'anova', 'prueba', 'r2'],
   },
   {
     id: 'clase-saber',
     etiqueta: 'Diapositivas · Saber Pro y nota de matemáticas',
     fuente: 'clase',
     enunciado:
-      'Puntaje del examen de matemáticas (Saber Pro) de 30 estudiantes (x) y nota final de su primer curso de matemáticas (y). Calcule la covarianza y el coeficiente de correlación de Pearson.',
+      'Puntaje del examen de matemáticas (Saber Pro) de 30 estudiantes (x) y nota final de su primer curso de matemáticas (y). Las diapositivas 7, 8 y 15 presentan los datos y su diagrama de dispersión; aquí se calculan, como práctica, la covarianza y el coeficiente de correlación de Pearson.',
     nombreY: 'Nota del primer curso de matemáticas',
     nombresX: ['Examen de matemáticas (Saber Pro)'],
     y: [2.4, 2.6, 3, 3.9, 3.6, 3, 3.1, 2.8, 2.2, 2.9, 1.9, 2.2, 3.1, 2.6, 2.8, 2.7, 2.4, 3, 3.3, 1.8, 2.8, 3.2, 1.8, 2.7, 2.1, 1.7, 1.7, 2.3, 2.6, 2.7],

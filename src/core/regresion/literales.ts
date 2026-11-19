@@ -156,7 +156,7 @@ export function respuestaLiteral(lit: Literal, r: ResultadoRegresion, op: Opcion
           `\\operatorname{Cov}(x,y) = ${fmtTex(s.cov, f)},\\qquad r = ${fmtTex(s.r, f)}`,
           `Cov(x,y) = ${fmt(s.cov, f)}; r = ${fmt(s.r, f)}`,
         ),
-        b.conclusion(interpretarPearson(s.r)),
+        b.conclusion(interpretarPearson(s.r, f)),
       ];
     }
     case 'parametros':

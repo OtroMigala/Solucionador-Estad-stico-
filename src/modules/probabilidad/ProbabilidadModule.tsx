@@ -19,6 +19,14 @@ import { FormBayes, FormClasica, FormConteo, FormContingencia, FormEspacio, Form
  */
 const DISTRIBUCIONES_ACTIVAS = false;
 
+/**
+ * Tabla de contingencia: desactivada. La regla del proyecto es incluir solo lo
+ * que está en las diapositivas, y la presentación no trabaja la tabla de
+ * contingencia como tema (la diap. 31 solo muestra una tabla de ejemplo). El
+ * código y las pruebas siguen; para volver a mostrarla basta con poner esto en true.
+ */
+const CONTINGENCIA_ACTIVA = false;
+
 const TODAS_LAS_HERRAMIENTAS: { id: Herramienta; nombre: string; distribucion?: true }[] = [
   { id: 'conteo', nombre: 'Técnicas de conteo' },
   { id: 'clasica', nombre: 'Probabilidad clásica' },
@@ -34,7 +42,9 @@ const TODAS_LAS_HERRAMIENTAS: { id: Herramienta; nombre: string; distribucion?: 
 ];
 
 /** Herramientas que se muestran (y a las que se puede llegar por la dirección, #conteo, #bayes…). */
-export const HERRAMIENTAS = TODAS_LAS_HERRAMIENTAS.filter((h) => DISTRIBUCIONES_ACTIVAS || !h.distribucion);
+export const HERRAMIENTAS = TODAS_LAS_HERRAMIENTAS.filter(
+  (h) => (DISTRIBUCIONES_ACTIVAS || !h.distribucion) && (CONTINGENCIA_ACTIVA || h.id !== 'contingencia'),
+);
 
 /** Puntos del taller que resuelve cada herramienta, para mostrarlos en el selector. */
 export function puntosTaller(h: Herramienta): string {

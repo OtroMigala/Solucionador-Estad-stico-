@@ -118,12 +118,37 @@ describe('pasos y validación de entradas', () => {
     expect(resolverRegresion({ y: [2, 2, 2, 2], x: [[1, 2, 3, 4]] }, { alfa: 0.05, formato: FORMATO_BASE }).ok).toBe(false);
   });
 
-  it('interpreta r por rangos', () => {
-    expect(interpretarPearson(0.95)).toMatch(/fuerte positiva/);
-    expect(interpretarPearson(-0.6)).toMatch(/moderada negativa/);
-    expect(interpretarPearson(0.2)).toMatch(/débil/);
-    expect(interpretarPearson(1)).toMatch(/perfecta/);
+  it('interpreta r con los rangos de la diap. 13', () => {
+    expect(interpretarPearson(0.1)).toMatch(/0,2, no hay correlación lineal/);
+    expect(interpretarPearson(-0.2)).toMatch(/no hay correlación lineal/);
+    expect(interpretarPearson(0.3)).toMatch(/débil.*positiva: la recta de regresión es creciente/);
+    expect(interpretarPearson(0.5)).toMatch(/débil/);
+    expect(interpretarPearson(-0.6)).toMatch(/fuerte.*negativa: la recta de regresión es decreciente/);
+    expect(interpretarPearson(0.8)).toMatch(/fuerte/);
+    expect(interpretarPearson(0.95)).toMatch(/óptima/);
+    expect(interpretarPearson(1)).toMatch(/positiva perfecta/);
+    expect(interpretarPearson(-1)).toMatch(/negativa perfecta/);
+    expect(interpretarPearson(0)).toMatch(/incorreladas/);
+    expect(interpretarPearson(0.3, { decimales: 4, coma: false })).toMatch(/0\.2 < \|r\| ≤ 0\.5/);
   });
+});
+
+describe('fórmulas de SCR, SCE y SCT de la diap. 24 (regresión simple)', () => {
+  for (const e of EJEMPLOS_REGRESION.filter((x) => x.x.length === 1)) {
+    it(e.etiqueta, () => {
+      const s = resolver(e.id).resultado;
+      const n = s.n;
+      const [b0, b1] = s.beta;
+      const sumY = e.y.reduce((a, v) => a + v, 0);
+      const sumXY = e.y.reduce((a, v, i) => a + v * e.x[0][i], 0);
+      const sumY2 = e.y.reduce((a, v) => a + v * v, 0);
+      cerca(b0 * sumY + b1 * sumXY - n * s.mediaY ** 2, s.SCR);
+      cerca(sumY2 - b0 * sumY - b1 * sumXY, s.SCE);
+      cerca(sumY2 - n * s.mediaY ** 2, s.SCT);
+      const anova = resolver(e.id).pasos.find((p) => p.titulo === 'Tabla ANOVA')!;
+      expect(anova.bloques.some((b) => b.tipo === 'formula' && b.latex.includes('\\hat\\beta_0\\sum y_i + \\hat\\beta_1\\sum x_i y_i'))).toBe(true);
+    });
+  }
 });
 
 describe('muchas variables', () => {

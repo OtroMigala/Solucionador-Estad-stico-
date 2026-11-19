@@ -4,7 +4,7 @@
  * múltiple». Los cálculos internos usan precisión completa; los pasos muestran
  * los valores redondeados según el formato elegido.
  */
-import { type Formato, fmt, fmtPct, fmtPctTex, fmtTex, fmtTexP, par, subindice } from '../formato';
+import { FORMATO_BASE, type Formato, fmt, fmtPct, fmtPctTex, fmtTex, fmtTexP, par, subindice } from '../formato';
 import { aumentada, frac, matriz, matrizNum, sistema, vectorNum } from '../latex';
 import { b, paso, type Bloque, type Celda, type Paso, type Respuesta } from '../steps';
 import { type EtapaGaussJordan, type OperacionFila, inversaGaussJordan, productoVector } from '../linalg';
@@ -69,25 +69,31 @@ export interface ResultadoRegresion {
   simple: ResumenSimple | null;
 }
 
-/** Rangos para interpretar r (diap. 12–13). Confirmar con la diapositiva del curso. */
+/**
+ * Rangos para interpretar |r|, tal cual la diap. 13 de «Covarianza y regresión
+ * lineal». Cada rango va de `desde` (excluido) a `hasta` (incluido).
+ */
 export const RANGOS_PEARSON = [
-  { desde: 0.8, fuerza: 'fuerte' },
-  { desde: 0.5, fuerza: 'moderada' },
-  { desde: 0, fuerza: 'débil' },
+  { desde: 0, hasta: 0.2, texto: 'no hay correlación lineal' },
+  { desde: 0.2, hasta: 0.5, texto: 'la correlación es débil' },
+  { desde: 0.5, hasta: 0.8, texto: 'la correlación es fuerte' },
+  { desde: 0.8, hasta: 1, texto: 'la correlación es óptima' },
 ] as const;
 
 const sumar = (v: number[]) => v.reduce((s, a) => s + a, 0);
 const xs = (j: number) => `x${subindice(j)}`;
 
-export function interpretarPearson(r: number): string {
+/** Interpretación de r con los rangos de la diap. 13 y los casos r = ±1 y r = 0 de la diap. 12. */
+export function interpretarPearson(r: number, f: Formato = FORMATO_BASE): string {
   const a = Math.abs(r);
-  if (a < 1e-12) return 'r = 0: no hay correlación lineal entre x e y.';
-  const fuerza = a > 1 - 1e-12 ? 'perfecta' : RANGOS_PEARSON.find((g) => a >= g.desde)!.fuerza;
-  const sentido =
-    r > 0
-      ? 'positiva (directa): cuando x aumenta, y tiende a aumentar'
-      : 'negativa (inversa): cuando x aumenta, y tiende a disminuir';
-  return `Correlación ${fuerza} ${sentido}.`;
+  const tol = 1e-12;
+  if (a < tol) return 'Como r = 0, las variables son incorreladas o linealmente independientes.';
+  if (a > 1 - tol) return r > 0 ? 'Como r = 1, hay correlación positiva perfecta.' : 'Como r = −1, hay correlación negativa perfecta.';
+  const g = RANGOS_PEARSON.find((x) => a <= x.hasta + tol)!;
+  const rango = `${fmt(g.desde, f)} < |r| ≤ ${fmt(g.hasta, f)}`;
+  if (g.desde === 0) return `Como ${rango}, ${g.texto}.`;
+  const sentido = r > 0 ? 'positiva: la recta de regresión es creciente' : 'negativa: la recta de regresión es decreciente';
+  return `Como ${rango}, ${g.texto}. Es una correlación lineal ${sentido}.`;
 }
 
 function validar(d: DatosRegresion, op: OpcionesRegresion): string | null {
@@ -303,10 +309,34 @@ function bloquesExpansion(y: number[], a: Anova, f: Formato, n: number): Bloque[
   ];
 }
 
-function bloquesAnova(y: number[], a: Anova, f: Formato, n: number, k: number): Bloque[] {
+/** Datos de la regresión simple para las fórmulas de SCR, SCE y SCT de la diap. 24. */
+interface SumasSimple {
+  b0: number;
+  b1: number;
+  sumY: number;
+  sumXY: number;
+  sumY2: number;
+}
+
+/** SCR, SCE y SCT con los estimadores, tal cual la diap. 24 de «Covarianza y regresión lineal». */
+function bloquesDiapositiva24(s: SumasSimple, a: Anova, f: Formato, n: number): Bloque[] {
+  const my = par(a.mediaY, f);
+  const B0 = par(s.b0, f);
+  const B1 = par(s.b1, f);
+  return [
+    b.texto('Con las fórmulas de la diapositiva 24, que usan los estimadores β̂₀ y β̂₁ y las sumas de la tabla de productos, se llega a los mismos valores:'),
+    b.formula(
+      `\\begin{aligned} SCR &= \\hat\\beta_0\\sum y_i + \\hat\\beta_1\\sum x_i y_i - n\\bar{y}^2 = ${B0}${par(s.sumY, f)} + ${B1}${par(s.sumXY, f)} - ${n}${my}^2 = ${fmtTex(a.SCR, f)} \\\\[4pt] SCE &= \\sum y_i^2 - \\hat\\beta_0\\sum y_i - \\hat\\beta_1\\sum x_i y_i = ${fmtTex(s.sumY2, f)} - ${B0}${par(s.sumY, f)} - ${B1}${par(s.sumXY, f)} = ${fmtTex(a.SCE, f)} \\\\[4pt] SCT &= \\sum y_i^2 - n\\bar{y}^2 = ${fmtTex(s.sumY2, f)} - ${n}${my}^2 = ${fmtTex(a.SCT, f)} \\end{aligned}`,
+      `SCR = β̂₀Σy + β̂₁Σxy − nȳ² = ${fmt(a.SCR, f)}; SCE = Σy² − β̂₀Σy − β̂₁Σxy = ${fmt(a.SCE, f)}; SCT = Σy² − nȳ² = ${fmt(a.SCT, f)}`,
+    ),
+  ];
+}
+
+function bloquesAnova(y: number[], a: Anova, f: Formato, n: number, k: number, simple?: SumasSimple): Bloque[] {
   const glE = k === 1 ? 'n-2' : 'n-(k+1)';
   return [
     ...bloquesExpansion(y, a, f, n),
+    ...(simple ? bloquesDiapositiva24(simple, a, f, n) : []),
     b.texto(
       `Comprobación: \\(SCR + SCE = ${fmtTex(a.SCR, f)} + ${fmtTex(a.SCE, f)} = ${fmtTex(a.SCR + a.SCE, f)} = SCT\\).`,
     ),
@@ -597,7 +627,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
           `r = Cov(x,y)/(Sx·Sy) = ${fmt(r, f)}`,
         ),
         b.resultado(`r = ${fmtTex(r, f)}`, `r = ${fmt(r, f)}`),
-        b.conclusion(interpretarPearson(r)),
+        b.conclusion(interpretarPearson(r, f)),
       ],
     }),
   );
@@ -671,7 +701,7 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
       parte: 'anova',
       porque:
         'La variación total de y (SCT) se divide en la parte que explica la recta (SCR) y la que queda sin explicar alrededor de ella (SCE): SCT = SCR + SCE. Al dividir cada suma entre sus grados de libertad se obtienen cuadrados medios comparables.',
-      bloques: bloquesAnova(y, a, f, n, 1),
+      bloques: bloquesAnova(y, a, f, n, 1, { b0, b1, sumY, sumXY, sumY2 }),
     }),
   );
 

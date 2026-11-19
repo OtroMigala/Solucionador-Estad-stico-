@@ -64,7 +64,7 @@ con fracciones exactas:
 | Espacio muestral y eventos (monedas, dados, dominó, urnas, listas; pesos iguales o no) | 17, 18, 22, 26, 33, 34 |
 | Reglas de dos eventos (aditiva, complemento, condicional, producto, independencia) y unión de tres | 16 |
 | Extracciones sucesivas con o sin reposición | 25, 29, 30 |
-| Tabla de contingencia | 31, 32 |
+| Tabla de contingencia (oculta: `CONTINGENCIA_ACTIVA = false`; no está en las diapositivas como tema). Los puntos 31 y 32 se resuelven con Reglas de probabilidad | 31, 32 |
 | Probabilidad total y teorema de Bayes | 35, 36 |
 
 **Distribuciones discretas** (presentación «Distribuciones discretas de
@@ -150,9 +150,9 @@ detiene si el archivo dependiera de algún recurso de internet.
 
 ## Pendientes para confirmar con el docente
 
-- Los rangos de interpretación de r (diap. 12–13) no se pudieron leer de la
-  presentación; se usan débil (< 0,5), moderada (0,5–0,8) y fuerte (≥ 0,8). Se
-  cambian en `RANGOS_PEARSON` (`src/core/regresion/index.ts`).
+- Interpretación de r: se usan los rangos de la diap. 13 (0–0,2 no hay
+  correlación lineal, 0,2–0,5 débil, 0,5–0,8 fuerte, 0,8–1 óptima), en
+  `RANGOS_PEARSON` (`src/core/regresion/index.ts`).
 - Punto 2: los seis primeros valores de x₃ no se pudieron extraer del PDF y se
   tomaron del conjunto de datos original del libro; verificar con el taller.
 - Si se espera la prueba t de cada coeficiente (aparece en el Excel de clase).

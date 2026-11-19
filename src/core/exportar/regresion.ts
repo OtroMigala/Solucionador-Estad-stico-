@@ -212,7 +212,7 @@ export function libroRegresion(e: EjercicioResuelto): { hojas: Hoja[]; activa: n
     switch (lit) {
       case 'correlacion': {
         const s = r.simple!;
-        respuestas.push(['Cov(x, y)', s.cov], ['r', c(s.r, 'resaltado')], [nota(interpretarPearson(s.r))]);
+        respuestas.push(['Cov(x, y)', s.cov], ['r', c(s.r, 'resaltado')], [nota(interpretarPearson(s.r, op.formato))]);
         break;
       }
       case 'parametros':
