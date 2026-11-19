@@ -567,10 +567,8 @@ export function FormSucesivas({ form, onCambio }: { form: SucesivasForm; onCambi
         <textarea id="suc-secuencias" rows={3} value={form.secuencias} onChange={(e) => onCambio({ ...form, secuencias: e.target.value })} />
       </Campo>
       <p className="nota">Si escribes varias líneas, las secuencias se tratan como casos mutuamente excluyentes y sus probabilidades se suman.</p>
-      <label className="check">
-        <input type="checkbox" checked={form.reemplazo} onChange={(e) => onCambio({ ...form, reemplazo: e.target.checked })} />
-        Con reposición (el objeto se devuelve antes de la siguiente extracción)
-      </label>
+      {/* Solo sin reposición, como en la diap. 32 y los puntos 25, 29 y 30: la extracción con reposición no se vio en clase. */}
+      <p className="nota">Las extracciones son sin reposición: cada objeto que sale no se devuelve.</p>
     </section>
   );
 }

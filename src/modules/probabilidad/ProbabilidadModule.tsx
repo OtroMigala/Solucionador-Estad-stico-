@@ -11,7 +11,15 @@ import { FormBinomial, FormHipergeometrica, FormMultinomial, FormPoisson } from 
 import { probTexP } from '../../core/probabilidad/distribuciones';
 import { FormBayes, FormClasica, FormConteo, FormContingencia, FormEspacio, FormReglas, FormSucesivas } from './Formularios';
 
-export const HERRAMIENTAS: { id: Herramienta; nombre: string }[] = [
+/**
+ * Distribuciones discretas (binomial, hipergeométrica, Poisson y multinomial):
+ * desactivadas por ahora, porque el tema se acaba de empezar en clase y no está
+ * en el taller. El código, los ejemplos y las pruebas siguen completos; para
+ * volver a mostrarlas basta con poner esto en true.
+ */
+const DISTRIBUCIONES_ACTIVAS = false;
+
+const TODAS_LAS_HERRAMIENTAS: { id: Herramienta; nombre: string; distribucion?: true }[] = [
   { id: 'conteo', nombre: 'Técnicas de conteo' },
   { id: 'clasica', nombre: 'Probabilidad clásica' },
   { id: 'espacio', nombre: 'Espacio muestral' },
@@ -19,11 +27,14 @@ export const HERRAMIENTAS: { id: Herramienta; nombre: string }[] = [
   { id: 'sucesivas', nombre: 'Extracciones sucesivas' },
   { id: 'contingencia', nombre: 'Tabla de contingencia' },
   { id: 'bayes', nombre: 'Probabilidad total y Bayes' },
-  { id: 'binomial', nombre: 'Binomial' },
-  { id: 'hipergeometrica', nombre: 'Hipergeométrica' },
-  { id: 'poisson', nombre: 'Poisson' },
-  { id: 'multinomial', nombre: 'Multinomial' },
+  { id: 'binomial', nombre: 'Binomial', distribucion: true },
+  { id: 'hipergeometrica', nombre: 'Hipergeométrica', distribucion: true },
+  { id: 'poisson', nombre: 'Poisson', distribucion: true },
+  { id: 'multinomial', nombre: 'Multinomial', distribucion: true },
 ];
+
+/** Herramientas que se muestran (y a las que se puede llegar por la dirección, #conteo, #bayes…). */
+export const HERRAMIENTAS = TODAS_LAS_HERRAMIENTAS.filter((h) => DISTRIBUCIONES_ACTIVAS || !h.distribucion);
 
 /** Puntos del taller que resuelve cada herramienta, para mostrarlos en el selector. */
 export function puntosTaller(h: Herramienta): string {
@@ -52,7 +63,7 @@ type Estados = { [H in Herramienta]: EstadoHerramienta<H> };
 
 function inicial(): Estados {
   const e = {} as Record<Herramienta, EstadoHerramienta<Herramienta>>;
-  for (const { id } of HERRAMIENTAS) {
+  for (const { id } of TODAS_LAS_HERRAMIENTAS) {
     const ej = ejemplosDe(id)[0] ?? null;
     e[id] = { ejemplo: ej, modificado: false, form: structuredClone(ej.form) };
   }

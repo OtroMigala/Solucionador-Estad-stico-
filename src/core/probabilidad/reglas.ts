@@ -36,7 +36,6 @@ export interface ResultadoDosEventos {
   union: Racional;
   complementoA: Racional;
   complementoB: Racional;
-  ninguno: Racional;
   BdadoA: Racional | null;
   AdadoB: Racional | null;
   independientes: boolean;
@@ -201,7 +200,7 @@ export function resolverDosEventos(d: DatosDosEventos, f: Formato): Respuesta<Re
 
   const cA = pA.complemento();
   const cB = pB.complemento();
-  const ninguno = union.complemento();
+  // Solo P(A′) y P(B′) (diap. 29). P(A′ ∩ B′) = 1 − P(A ∪ B) usa las leyes de De Morgan, que no se vieron en clase.
   pasos.push(
     paso({
       titulo: 'Complementos',
@@ -212,11 +211,6 @@ export function resolverDosEventos(d: DatosDosEventos, f: Formato): Respuesta<Re
           `P(${a}') = 1 - ${pA.aLatex()} = ${probTex(cA, f)},\\qquad P(${c}') = 1 - ${pB.aLatex()} = ${probTex(cB, f)}`,
           `P(${at}′) = ${probTexto(cA, f)}; P(${ct}′) = ${probTexto(cB, f)}`,
         ),
-        b.formula(
-          `P(${a}'\\cap ${c}') = 1 - P(${a}\\cup ${c}) = 1 - ${union.aLatex()} = ${probTex(ninguno, f)}`,
-          `P(ninguno) = 1 − P(${at} ∪ ${ct}) = ${probTexto(ninguno, f)}`,
-        ),
-        b.texto(`\\(P(${a}'\\cap ${c}')\\) es la probabilidad de que no ocurra ninguno de los dos eventos.`),
       ],
     }),
   );
@@ -276,7 +270,7 @@ export function resolverDosEventos(d: DatosDosEventos, f: Formato): Respuesta<Re
   return {
     ok: true,
     solucion: {
-      resultado: { interseccion: inter, union, complementoA: cA, complementoB: cB, ninguno, BdadoA, AdadoB, independientes },
+      resultado: { interseccion: inter, union, complementoA: cA, complementoB: cB, BdadoA, AdadoB, independientes },
       pasos,
     },
   };

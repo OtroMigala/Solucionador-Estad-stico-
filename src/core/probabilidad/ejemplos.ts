@@ -654,7 +654,7 @@ const CLASE: EjemploProbabilidad[] = [
     etiqueta: 'Empleo en Popayán',
     fuente: 'clase',
     enunciado:
-      'Se elige al azar una de 900 personas para promover nuevas industrias en Popayán. H: se elige un hombre; E: el elegido tiene empleo. Calcule P(H | E) y P(E | H).',
+      'Se elige al azar una de 900 personas para promover nuevas industrias en Popayán. H: se elige un hombre; E: el elegido tiene empleo. La diapositiva 31 solo presenta la tabla y los eventos; aquí se calculan, como práctica, P(H | E) y P(E | H).',
     form: {
       filas: [
         { nombre: 'Hombre', simbolo: 'H' },

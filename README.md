@@ -68,7 +68,10 @@ con fracciones exactas:
 | Probabilidad total y teorema de Bayes | 35, 36 |
 
 **Distribuciones discretas** (presentación «Distribuciones discretas de
-probabilidad»; 18 ejemplos y ejercicios de clase, validados contra scipy):
+probabilidad»; 18 ejemplos y ejercicios de clase, validados contra scipy).
+**Desactivadas por ahora** en la interfaz, porque no están en el taller: el
+código y las pruebas siguen completos y se vuelven a mostrar con
+`DISTRIBUCIONES_ACTIVAS = true` en `src/modules/probabilidad/ProbabilidadModule.tsx`.
 
 | Herramienta | Qué calcula |
 |---|---|
@@ -153,4 +156,4 @@ detiene si el archivo dependiera de algún recurso de internet.
 - Punto 2: los seis primeros valores de x₃ no se pudieron extraer del PDF y se
   tomaron del conjunto de datos original del libro; verificar con el taller.
 - Si se espera la prueba t de cada coeficiente (aparece en el Excel de clase).
-- Distribuciones discretas y normal (segunda versión).
+- Distribuciones discretas: hechas pero ocultas hasta que se vean en clase.

@@ -358,7 +358,8 @@ export function resolverHerramienta<H extends Herramienta>(h: H, form: FormPorHe
         .split('\n')
         .map((l) => l.split(/[\s,;]+/).filter(Boolean))
         .filter((l) => l.length > 0);
-      const r = resolverSucesivas({ categorias, secuencias, reemplazo: s.reemplazo }, f);
+      // Siempre sin reposición: es lo que se vio en clase (diap. 32) y lo que piden los puntos 25, 29 y 30.
+      const r = resolverSucesivas({ categorias, secuencias, reemplazo: false }, f);
       if (!r.ok) return r;
       return conValores(r, [{ etiqueta: 'P', valor: r.solucion.resultado }]);
     }
