@@ -17,6 +17,7 @@ import {
   type ResultadoRegresion,
   decisionF,
   ecuacionTexto,
+  hipotesisExcel,
   interpretacionR2,
   interpretarPearson,
 } from '../regresion';
@@ -166,7 +167,7 @@ export function libroRegresion(e: EjercicioResuelto): { hojas: Hoja[]; activa: n
 
   /* ───── Resumen (formato de la herramienta de regresión de Excel) ───── */
   const alfaTxt = fmt(op.alfa, { ...op.formato, decimales: 6 });
-  const h0 = k === 1 ? 'H0: β1 = 0     H1: β1 ≠ 0' : `H0: β1 = β2 = … = β${k} = 0     H1: al menos un βj ≠ 0`;
+  const h0 = hipotesisExcel(k);
   const resumen: ValorCelda[][] = [
     [titulo('Resumen')],
     [nota(e.titulo)],

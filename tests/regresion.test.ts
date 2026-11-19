@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fixtures from '../validation/fixtures/regresion.json';
 import { EJEMPLOS_REGRESION } from '../src/core/regresion/ejemplos';
-import { resolverRegresion, interpretarPearson } from '../src/core/regresion';
+import { resolverRegresion, interpretarPearson, hipotesisF } from '../src/core/regresion';
 import { FORMATO_BASE } from '../src/core/formato';
 import { datosSinteticos } from './sinteticos';
 
@@ -200,4 +200,17 @@ describe('forma expandida de las sumas de cuadrados', () => {
       expect(pasoAnova.bloques.some((b) => b.tipo === 'formula' && b.latex.includes('n\\bar{y}^2'))).toBe(true);
     });
   }
+});
+
+describe('fidelidad a las diapositivas', () => {
+  it('regresión simple: H₁: β₁ > 0 (diap. 25); múltiple: H₀ de la diap. 11', () => {
+    expect(hipotesisF(1).texto).toBe('H₀: β₁ = 0; H₁: β₁ > 0');
+    expect(hipotesisF(3).texto).toContain('H₀: β₁ = … = βₖ = 0');
+  });
+  it('no interpreta cada β̂ⱼ (no está en las diapositivas)', () => {
+    for (const e of EJEMPLOS_REGRESION) {
+      const txt = JSON.stringify(resolver(e.id).pasos);
+      expect(txt, e.id).not.toMatch(/aumenta una unidad|Interpretación de la pendiente/);
+    }
+  });
 });

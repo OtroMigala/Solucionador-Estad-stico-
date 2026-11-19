@@ -163,21 +163,19 @@ export function ecuacionTex(beta: number[], f: Formato, simple: boolean): string
   return enLineas('\\hat{y}', fmtTex(beta[0], f), terminos);
 }
 
-/** Tabla de los β̂ⱼ con su variable; con interpretación, dice cuánto cambia y por unidad de xⱼ. */
-export function tablaCoeficientes(beta: number[], f: Formato, nombresX?: string[], conInterpretacion = false): Bloque {
+/** Tabla de los β̂ⱼ con su variable. */
+export function tablaCoeficientes(beta: number[], f: Formato, nombresX?: string[]): Bloque {
   return {
     tipo: 'tabla',
     columnas: [
       { titulo: 'Estimador', alinear: 'izq' },
       { titulo: 'Variable', alinear: 'izq' },
       { titulo: 'Valor' },
-      ...(conInterpretacion ? [{ titulo: 'Si xⱼ aumenta una unidad (las demás fijas), y…', alinear: 'izq' as const }] : []),
     ],
     filas: beta.map((bj, j) => [
       { latex: `\\hat\\beta_{${j}}`, texto: `β̂${subindice(j)}` },
       j === 0 ? 'intercepto' : `${xs(j)}${nombresX?.[j - 1] ? ` · ${nombresX[j - 1]}` : ''}`,
       fmt(bj, f),
-      ...(conInterpretacion ? [j === 0 ? '' : `${bj >= 0 ? 'aumenta' : 'disminuye'} en promedio ${fmt(Math.abs(bj), f)}`] : []),
     ]),
   };
 }
@@ -372,15 +370,23 @@ export function tablaAnova(a: Anova, f: Formato, n: number, k: number): Bloque {
   };
 }
 
-/** Hipótesis de la prueba F, en LaTeX y en texto plano. */
+/**
+ * Hipótesis de la prueba F, en LaTeX y en texto plano. En regresión simple se
+ * escribe H₁: β₁ > 0, tal cual la diap. 25 de «Covarianza y regresión lineal».
+ * En múltiple, la diap. 11 solo da H₀; H₁ es su negación.
+ */
 export function hipotesisF(k: number): { latex: string; texto: string } {
   const h0 = k === 1 ? '\\beta_1 = 0' : sumaGeneral(k, (j) => `\\beta_{${j}}`, ' = ') + ' = 0';
-  const h1 = k === 1 ? '\\beta_1 \\neq 0' : '\\text{al menos un } \\beta_j \\neq 0';
+  const h1 = k === 1 ? '\\beta_1 > 0' : '\\text{al menos un } \\beta_j \\neq 0';
   return {
     latex: `H_0: ${h0} \\qquad H_1: ${h1}`,
-    texto: `H₀: ${k === 1 ? 'β₁ = 0' : 'β₁ = … = βₖ = 0'}; H₁: ${k === 1 ? 'β₁ ≠ 0' : 'al menos un βⱼ ≠ 0'}`,
+    texto: `H₀: ${k === 1 ? 'β₁ = 0' : 'β₁ = … = βₖ = 0'}; H₁: ${k === 1 ? 'β₁ > 0' : 'al menos un βⱼ ≠ 0'}`,
   };
 }
+
+/** Las mismas hipótesis con los nombres que usa el Excel (sin subíndices). */
+export const hipotesisExcel = (k: number) =>
+  k === 1 ? 'H0: β1 = 0     H1: β1 > 0' : `H0: β1 = β2 = … = β${k} = 0     H1: al menos un βj ≠ 0`;
 
 /** Decisión redactada de la prueba F. */
 export function decisionF(a: Anova, alfa: number, f: Formato, k: number, nombreY: string): string {
@@ -586,10 +592,10 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
         ),
         b.conclusion(
           cov > 0
-            ? 'La covarianza es positiva: x e y tienden a aumentar juntas.'
+            ? 'Como Cov(x, y) > 0, la relación entre las variables es directamente proporcional.'
             : cov < 0
-              ? 'La covarianza es negativa: cuando x aumenta, y tiende a disminuir.'
-              : 'La covarianza es cero: no hay relación lineal.',
+              ? 'Como Cov(x, y) < 0, la relación entre las variables es inversamente proporcional.'
+              : 'Como Cov(x, y) = 0, no hay relación lineal entre las variables.',
         ),
       ],
     }),
@@ -677,9 +683,6 @@ function resolverSimple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<Res
           `β̂₀ = ȳ − β̂₁x̄ = ${fmt(b0, f)}`,
         ),
         b.resultado(ecuacionTex(beta, f, true), ecuacionTexto(beta, f, true)),
-        b.texto(
-          `Interpretación de la pendiente: por cada unidad que aumenta x, y ${b1 >= 0 ? 'aumenta' : 'disminuye'} en promedio ${fmt(Math.abs(b1), f)} unidades.`,
-        ),
       ],
     }),
   );
@@ -827,7 +830,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
       metodo: 'ecuaciones-normales-multiple',
       parte: 'planteamiento',
       porque:
-        'Cuando y depende de varias variables, el modelo incluye un coeficiente βⱼ por cada una: βⱼ es el cambio promedio de y cuando xⱼ aumenta una unidad y las demás x se mantienen fijas.',
+        'Cuando se necesita más de una variable independiente, el modelo incluye un coeficiente βⱼ por cada una y un error aleatorio εᵢ. Como en la regresión simple, se supone que los errores son independientes, con media cero y varianza común σ², y los β̂ⱼ se estiman por mínimos cuadrados.',
       bloques: bloqueModelo(d, false),
     }),
   );
@@ -988,7 +991,7 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
                 beta.map((v, j) => `β̂${subindice(j)} = ${fmt(v, fSig)}`).join('; '),
               ),
             ]),
-            tablaCoeficientes(beta, fSig, d.nombresX, true),
+            tablaCoeficientes(beta, fSig, d.nombresX),
             b.resultado(ecuacionTex(beta, fSig, false), ecuacionTexto(beta, fSig, false)),
           ]
         : [
@@ -997,15 +1000,6 @@ function resolverMultiple(d: DatosRegresion, op: OpcionesRegresion): Respuesta<R
               beta.map((v, j) => `β̂${subindice(j)} = ${fmt(v, fSig)}`).join('; '),
             ),
             b.resultado(ecuacionTex(beta, fSig, false), ecuacionTexto(beta, fSig, false)),
-            b.texto(
-              beta
-                .slice(1)
-                .map(
-                  (bj, j) =>
-                    `${xs(j + 1)}${d.nombresX?.[j] ? ` (${d.nombresX[j]})` : ''}: si aumenta una unidad y las demás se mantienen fijas, y ${bj >= 0 ? 'aumenta' : 'disminuye'} en promedio ${fmt(Math.abs(bj), fSig)}.`,
-                )
-                .join(' '),
-            ),
           ],
     }),
   );
