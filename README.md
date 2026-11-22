@@ -63,8 +63,8 @@ con fracciones exactas:
 | Probabilidad clásica n(A)/n(S) | 18c, 19, 20, 21, 23, 24, 27, 28 |
 | Espacio muestral y eventos (monedas, dados, dominó, urnas, listas; pesos iguales o no) | 17, 18, 22, 26, 33, 34 |
 | Reglas de dos eventos (aditiva, complemento, condicional, producto, independencia) y unión de tres | 16 |
-| Extracciones sucesivas con o sin reposición | 25, 29, 30 |
-| Tabla de contingencia (oculta: `CONTINGENCIA_ACTIVA = false`; no está en las diapositivas como tema). Los puntos 31 y 32 se resuelven con Reglas de probabilidad | 31, 32 |
+| Extracciones sucesivas sin reposición | 25, 29, 30 |
+| Tabla de contingencia: marginales, conjuntas y condicionales (tabla de la diap. 31, condicional de la diap. 30; se oculta con `CONTINGENCIA_ACTIVA = false`) | 31, 32 |
 | Probabilidad total y teorema de Bayes | 35, 36 |
 
 **Distribuciones discretas** (presentación «Distribuciones discretas de

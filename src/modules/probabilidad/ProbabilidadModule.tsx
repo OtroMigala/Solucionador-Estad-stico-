@@ -20,12 +20,11 @@ import { FormBayes, FormClasica, FormConteo, FormContingencia, FormEspacio, Form
 const DISTRIBUCIONES_ACTIVAS = false;
 
 /**
- * Tabla de contingencia: desactivada. La regla del proyecto es incluir solo lo
- * que está en las diapositivas, y la presentación no trabaja la tabla de
- * contingencia como tema (la diap. 31 solo muestra una tabla de ejemplo). El
- * código y las pruebas siguen; para volver a mostrarla basta con poner esto en true.
+ * Tabla de contingencia: activa. La diap. 31 presenta la tabla de ejemplo y la
+ * diap. 30 da la probabilidad condicional con la que se resuelve (puntos 31 y
+ * 32 del taller). Para ocultarla basta con poner esto en false.
  */
-const CONTINGENCIA_ACTIVA = false;
+const CONTINGENCIA_ACTIVA = true;
 
 const TODAS_LAS_HERRAMIENTAS: { id: Herramienta; nombre: string; distribucion?: true }[] = [
   { id: 'conteo', nombre: 'Técnicas de conteo' },
