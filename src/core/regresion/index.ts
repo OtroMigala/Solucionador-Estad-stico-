@@ -287,8 +287,13 @@ function bloquesExpansion(y: number[], a: Anova, f: Formato, n: number): Bloque[
   const s = sumasExpandidas(y, a);
   const my = par(a.mediaY, f);
   return [
+    b.texto('Cada cuadrado de la tabla se desarrolla como un binomio, fila por fila:'),
+    b.formula(
+      `\\begin{aligned} (y_i-\\bar{y})^2 &= y_i^2 - 2\\bar{y}\\,y_i + \\bar{y}^2 \\\\ (\\hat{y}_i-\\bar{y})^2 &= \\hat{y}_i^2 - 2\\bar{y}\\,\\hat{y}_i + \\bar{y}^2 \\\\ (y_i-\\hat{y}_i)^2 &= y_i^2 - 2\\,y_i\\hat{y}_i + \\hat{y}_i^2 \\end{aligned}`,
+      '(yᵢ − ȳ)² = yᵢ² − 2ȳyᵢ + ȳ²; (ŷᵢ − ȳ)² = ŷᵢ² − 2ȳŷᵢ + ȳ²; (yᵢ − ŷᵢ)² = yᵢ² − 2yᵢŷᵢ + ŷᵢ²',
+    ),
     b.texto(
-      'Cada cuadrado se desarrolla como un binomio, \\((y_i-\\bar{y})^2 = y_i^2 - 2\\bar{y}\\,y_i + \\bar{y}^2\\), y se suma fila por fila. Como \\(\\bar{y}\\) es una constante, sale de la sumatoria, y \\(\\bar{y}^2\\) sumado n veces da \\(n\\bar{y}^2\\):',
+      'Al sumar, \\(\\bar{y}\\) es una constante: sale de la sumatoria, y \\(\\bar{y}^2\\) sumado n veces da \\(n\\bar{y}^2\\). En cambio \\(\\hat{y}_i\\) cambia en cada fila, por eso en SCE quedan las sumas de las columnas \\(y_i\\hat{y}_i\\) e \\(\\hat{y}_i^2\\):',
     ),
     b.formula(
       `\\sum(y_i-\\bar{y})^2 = \\sum y_i^2 - 2\\bar{y}\\sum y_i + \\sum_{i=1}^{n}\\bar{y}^2 = \\sum y_i^2 - 2\\bar{y}\\sum y_i + n\\bar{y}^2`,
@@ -339,7 +344,7 @@ function bloquesAnova(y: number[], a: Anova, f: Formato, n: number, k: number, s
       `Comprobación: \\(SCR + SCE = ${fmtTex(a.SCR, f)} + ${fmtTex(a.SCE, f)} = ${fmtTex(a.SCR + a.SCE, f)} = SCT\\).`,
     ),
     b.formula(
-      `CMR = \\frac{SCR}{${k === 1 ? '1' : 'k'}} = ${frac(fmtTex(a.SCR, f), a.glR)} = ${fmtTex(a.CMR, f)},\\qquad CME = S^2 = \\frac{SCE}{${glE}} = ${frac(fmtTex(a.SCE, f), a.glE)} = ${fmtTex(a.CME, f)}`,
+      `\\begin{aligned} CMR &= \\frac{SCR}{${k === 1 ? '1' : 'k'}} = ${frac(fmtTex(a.SCR, f), a.glR)} = ${fmtTex(a.CMR, f)} \\\\[4pt] CME &= S^2 = \\frac{SCE}{${glE}} = ${frac(fmtTex(a.SCE, f), a.glE)} = ${fmtTex(a.CME, f)} \\end{aligned}`,
       `CMR = SCR/${a.glR} = ${fmt(a.CMR, f)}; CME = S² = SCE/${a.glE} = ${fmt(a.CME, f)}`,
     ),
     b.formula(

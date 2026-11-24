@@ -6,6 +6,7 @@ import { FORMATO_BASE } from '../src/core/formato';
 import { estadisticasExcel, libroRegresion } from '../src/core/exportar/regresion';
 import { escribirXlsx } from '../src/core/exportar/xlsx';
 import { leerXlsx, type Valor } from '../src/core/importar/xlsx';
+import { construirDatos, hojaSugerida, leerArchivo, sugerirRoles } from '../src/core/importar';
 import { datosSinteticos } from './sinteticos';
 
 function cerca(a: number, b: number, tol = 1e-6) {
@@ -111,5 +112,20 @@ describe('libro exportado', () => {
     const sumas = leerXlsx(escribirXlsx(libro.hojas)).find((h) => h.nombre === 'Tabla de sumas')!.celdas;
     // i + 16 x + y + 136 cuadrados y productos entre x + 16 productos con y + y²
     expect(sumas[3].length).toBe(1 + 16 + 1 + 136 + 16 + 1);
+  });
+});
+
+describe('el Excel descargado se puede volver a subir', () => {
+  it.each(['taller-2', 'clase-dqo', 'taller-3'])('%s: reconoce y, las x y sus nombres', (id) => {
+    const { e, datos, op, resultado } = resolver(id);
+    const { hojas, activa } = libroRegresion({ datos, resultado, op, literales: e.literales, titulo: e.etiqueta, enunciado: e.enunciado });
+    const leidas = leerArchivo('ejercicio.xlsx', escribirXlsx(hojas, activa));
+    const h = leidas[hojaSugerida(leidas)];
+    expect(h.nombre).toBe('Datos');
+    const d = construirDatos(h.tabla!, sugerirRoles(h.tabla!));
+    if ('error' in d) throw new Error(d.error);
+    expect(d.nombreY).toBe(e.nombreY);
+    expect(d.nombresX).toEqual(e.nombresX);
+    expect(d.filas).toEqual(e.y.map((yi, i) => [yi, ...e.x.map((c) => c[i])]));
   });
 });

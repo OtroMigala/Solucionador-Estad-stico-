@@ -130,11 +130,30 @@ function esFilaDeSumas(valores: (number | null)[][]): boolean {
   return comparadas >= 2;
 }
 
+const textoDe = (f: Valor[] | undefined, j: number) => {
+  const v = f?.[j];
+  return typeof v === 'string' && !esNumero(v) ? v.trim() : '';
+};
+
+/** Une el símbolo de la fila de arriba con el nombre de la de abajo: «x₁» + «RS del emisor» → «x₁ (RS del emisor)». */
+function unirEncabezado(sim: string, nombre: string): string {
+  if (!sim) return nombre;
+  if (!nombre) return sim;
+  return simbolo(sim) ? `${sim} (${nombre})` : `${sim} ${nombre}`;
+}
+
 function encabezadosDe(celdas: Valor[][], fila: number, columnas: number[]): string[] {
   for (let r = fila - 1; r >= Math.max(0, fila - 3); r--) {
     const f = celdas[r] ?? [];
-    if (columnas.some((j) => typeof f[j] === 'string' && !esNumero(f[j]))) {
-      return columnas.map((j) => (f[j] === null || f[j] === undefined ? '' : String(f[j]).trim()));
+    if (columnas.some((j) => textoDe(f, j) !== '')) {
+      const propios = columnas.map((j) => (f[j] === null || f[j] === undefined ? '' : String(f[j]).trim()));
+      // Dos filas de encabezado, con los símbolos (y, x1…) encima y los nombres debajo, como la hoja
+      // «Datos» del Excel que descarga el programa: sin unirlas, y se tomaría de los nombres.
+      if (r > 0 && !propios.some((h) => simbolo(h))) {
+        const simbolos = columnas.map((j) => textoDe(celdas[r - 1], j));
+        if (simbolos.some((h) => simbolo(h))) return propios.map((h, i) => unirEncabezado(simbolos[i], h));
+      }
+      return propios;
     }
   }
   return columnas.map(() => '');

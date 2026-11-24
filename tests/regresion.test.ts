@@ -198,6 +198,8 @@ describe('forma expandida de las sumas de cuadrados', () => {
       cerca(y2 - 2 * yg + g2, s.SCE);
       const pasoAnova = resolver(e.id).pasos.find((p) => p.titulo === 'Tabla ANOVA')!;
       expect(pasoAnova.bloques.some((b) => b.tipo === 'formula' && b.latex.includes('n\\bar{y}^2'))).toBe(true);
+      // El binomio de cada cuadrado, también el de (yᵢ − ŷᵢ)², como lo pidió el docente.
+      expect(pasoAnova.bloques.some((b) => b.tipo === 'formula' && b.texto.includes('(yᵢ − ŷᵢ)² = yᵢ² − 2yᵢŷᵢ + ŷᵢ²'))).toBe(true);
     });
   }
 });
